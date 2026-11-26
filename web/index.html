@@ -1,0 +1,1137 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>奥格资源编辑器融合版本</title>
+  <link rel="stylesheet" href="./viewer.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <button id="open" type="button">打开 ISO</button>
+    <button id="open-project" type="button">打开工程</button>
+    <button id="save-project" class="primary" type="button" disabled>保存工程</button>
+    <button id="save-iso" class="primary" type="button" disabled>另存新镜像</button>
+    <button id="save-package" type="button" disabled>导出改动包</button>
+    <button id="undo" type="button" disabled>撤销</button>
+    <button id="redo" type="button" disabled>重做</button>
+    <span class="top-path" id="iso-name">请选择 ISO</span>
+    <span id="change-count" class="change-count" hidden></span>
+  </header>
+
+  <dialog id="switch-document" aria-labelledby="switch-title">
+    <form method="dialog">
+      <h2 id="switch-title">切换文件</h2>
+      <p>当前修改尚未保存。放弃修改并打开「<span id="switch-filename"></span>」？</p>
+      <div class="dialog-buttons">
+        <button value="cancel" autofocus>继续编辑</button>
+        <button value="discard">放弃修改并切换</button>
+      </div>
+    </form>
+  </dialog>
+
+  <main id="kgf-workspace" class="workspace">
+    <aside class="roles" aria-label="角色与形态">
+      <div class="role-head">
+        <h1>角色 / 形态</h1>
+        <input id="role-search" type="search" placeholder="搜索角色" aria-label="搜索角色">
+      </div>
+      <div class="role-list" id="roles" aria-label="角色列表"></div>
+      <div class="role-controls">
+        <label for="config">出场配置</label>
+        <select id="config" aria-label="出场配置"></select>
+        <label for="shape">模型形态</label>
+        <select id="shape" aria-label="模型形态"></select>
+        <label for="model-appearance">外观</label>
+        <select id="model-appearance" aria-label="外观" disabled></select>
+        <label for="model-part">模型部件</label>
+        <select id="model-part" aria-label="模型部件" disabled></select>
+        <p id="role-source" class="role-source"></p>
+      </div>
+    </aside>
+
+    <section class="preview-panel" aria-label="模型与动画">
+      <div class="viewport-shell">
+        <canvas id="viewport" aria-label="角色 3D 预览"></canvas>
+        <div class="view-heading"><span>3D 预览</span><span>左拖旋转 / 右拖平移 / 滚轮缩放</span></div>
+        <div class="view-message" id="view-message">打开 KGF v7 ISO 或工程后开始预览</div>
+        <div class="view-stats" id="view-stats"></div>
+      </div>
+      <div class="player-controls">
+        <div class="view-options" id="view-options">
+          <label><input type="checkbox" data-option="bones">骨架</label>
+          <label title="显示当前帧的球形和胶囊判定"><input type="checkbox" data-option="hit" aria-controls="collider-key">碰撞球</label>
+          <label><input type="checkbox" data-option="wire">线框</label>
+          <label><input type="checkbox" data-option="texture" checked>贴图</label>
+          <label title="关闭后在原地播放，保留上下起伏和重心移动"><input type="checkbox" data-option="root" checked>根位移</label>
+          <label><input type="checkbox" id="native-rate" checked>原生速率</label>
+          <div id="collider-key" class="collider-key" role="group" aria-label="碰撞球分类" hidden>
+            <label class="key-attack"><input type="checkbox" data-collider-layer="attack" checked>攻击</label>
+            <label class="key-body"><input type="checkbox" data-collider-layer="body" checked>身体</label>
+            <label class="key-extra"><input type="checkbox" data-collider-layer="extra" checked>附加</label>
+          </div>
+        </div>
+        <label class="shade-control" for="shading">着色
+          <select id="shading"><option value="lit">顶点法线光照</option><option value="flat">原始材质颜色</option></select>
+        </label>
+        <div class="play-controls">
+          <button type="button" id="play" class="play" disabled><span id="play-icon" aria-hidden="true">▶</span><span id="play-text">播放</span></button>
+          <button type="button" id="prev" class="icon-button" title="上一帧（←）" aria-label="上一帧" disabled>‹</button>
+          <button type="button" id="next" class="icon-button" title="下一帧（→）" aria-label="下一帧" disabled>›</button>
+          <select id="speed" aria-label="播放速度">
+            <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option><option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+          <label class="loop"><input type="checkbox" id="loop" checked>循环</label>
+          <button type="button" id="reset-view" class="reset">复位相机</button>
+        </div>
+        <div class="timeline">
+          <div class="track">
+            <input id="scrub" type="range" min="0" max="0" value="0" step="any" aria-label="动作时间轴" disabled>
+            <div id="timeline-markers" class="track-markers" aria-label="事件帧标记"></div>
+          </div>
+          <div class="frame-current">
+            <input id="frame-number" type="number" min="0" max="0" value="0" aria-label="跳转到帧" disabled>
+            <span>/ <span id="last-frame">0</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="moves">
+        <div class="move-filter">
+          <input id="move-search" type="search" aria-label="搜索动作及触发条件" placeholder="搜索动作名、编号、触发条件（双击播放）">
+          <button id="move-combos" type="button" aria-pressed="false" disabled>连招</button>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="动作列表">
+            <thead><tr><th>ANM</th><th>动作名 / 用途</th><th>帧</th><th>基础伤害</th><th>事件</th></tr></thead>
+            <tbody id="moves"></tbody>
+          </table>
+          <p id="move-empty" class="empty">请选择角色</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="editor" aria-label="动作事件与资源">
+      <div class="editor-head">
+        <div class="editor-controls">
+          <div class="crumb">编辑工作区 <span>/</span> <b id="workspace-section">动作与战斗</b></div>
+          <div class="editor-buttons">
+            <button id="toggle-help" type="button" aria-expanded="false">显示说明</button>
+            <button id="toggle-nav" type="button" aria-expanded="true">收起导航</button>
+          </div>
+        </div>
+        <div class="editor-title"><h2 id="editor-title">必杀技配置</h2><div class="frame-label">帧 <strong id="frame-label">—</strong></div></div>
+        <div class="editor-controls">
+          <div id="editor-context" class="editor-context">请选择动作</div>
+          <span class="readonly"><span aria-hidden="true"></span>原镜像只读</span>
+        </div>
+        <p id="editor-help" class="panel-note" hidden></p>
+      </div>
+      <div class="editor-body">
+        <nav id="sections" class="sections" aria-label="编辑功能">
+          <input id="feature-search" type="search" placeholder="查找功能 · Ctrl+K" aria-label="查找功能">
+          <div class="nav-group resource-nav">
+            <div class="nav-label">角色与模型</div>
+            <button type="button" data-tab="overview" aria-pressed="false"><b>⊞</b>角色总览</button>
+            <button type="button" data-tab="attributes" aria-pressed="false"><b>⊞</b>角色属性</button>
+            <button type="button" data-tab="appearance" aria-pressed="false"><b>⊞</b>外观与贴图</button>
+            <button type="button" data-tab="source" aria-pressed="false"><b>⊞</b>形态与资源绑定</button>
+            <button type="button" data-tab="geometry" aria-pressed="false"><b>⊞</b>判定几何</button>
+          </div>
+          <div class="nav-group">
+            <div class="nav-label">动作与战斗</div>
+            <button type="button" data-tab="animation" aria-pressed="false"><b>▸</b>动画与关键帧</button>
+            <button type="button" data-tab="commands" aria-pressed="false"><b>▸</b>按键与连段解析</button>
+            <button type="button" data-tab="mix" aria-pressed="false"><b>▸</b>配招</button>
+            <button type="button" data-tab="ai" aria-pressed="false"><b>▸</b>电脑 AI</button>
+            <button type="button" data-tab="hit" aria-pressed="false"><b>▸</b>招式与判定</button>
+            <button type="button" data-tab="damage" aria-pressed="false"><b>▸</b>伤害记录</button>
+            <button type="button" data-tab="skill" aria-pressed="false"><b>▸</b>技能参数</button>
+            <button type="button" data-tab="finishers" class="active" aria-pressed="true"><b>▸</b>必杀技配置</button>
+            <button type="button" data-tab="throws" aria-pressed="false"><b>▸</b>抓取与投技</button>
+            <button type="button" data-tab="states" aria-pressed="false"><b>▸</b>动作状态表</button>
+            <button type="button" data-tab="all" aria-pressed="false"><b>▸</b>帧事件</button>
+          </div>
+          <div class="nav-group sound-nav">
+            <div class="nav-label">手型与声音</div>
+            <button type="button" data-tab="hands" aria-pressed="false"><b>◈</b>手型事件</button>
+            <button type="button" data-tab="audio" aria-pressed="false"><b>♪</b>音效事件表</button>
+            <button type="button" data-tab="effects" aria-pressed="false"><b>◈</b>特效事件表</button>
+            <button type="button" data-tab="music" aria-pressed="false"><b>♪</b>角色 BGM</button>
+          </div>
+          <div class="nav-group system-nav">
+            <div class="nav-label">镜像资源</div>
+            <button type="button" data-tab="resources" aria-pressed="false"><b>⊞</b>通用资源</button>
+          </div>
+          <div class="nav-group system-nav">
+            <div class="nav-label">系统与校验</div>
+            <button type="button" data-tab="changes" aria-pressed="false"><b>✓</b>修改记录</button>
+          </div>
+        </nav>
+        <div class="inspector">
+          <section id="ai-panel" class="work-panel" hidden>
+            <form id="ai-distance-form" class="event-detail">
+              <div class="property-inputs">
+                <label>战斗实际难度
+                  <select id="ai-level" aria-label="战斗实际难度">
+                    <option value="0">0</option><option value="1" selected>1</option><option value="2">2</option>
+                    <option value="3">3 及以上</option>
+                  </select>
+                </label>
+                <label>近距策略分界
+                  <input id="ai-near" type="number" min="0" max="100000" step="1" required aria-label="近距策略分界">
+                </label>
+              </div>
+              <p class="panel-note">单位为游戏坐标。战斗实际难度包含原生开战配置的角色修正。</p>
+              <div class="edit-actions">
+                <button id="ai-near-apply" class="primary" type="submit">应用距离</button>
+                <button id="ai-near-reset" type="button">恢复分界</button>
+              </div>
+            </form>
+            <div class="property-inputs">
+              <label>脚本<select id="ai-group" aria-label="AI 脚本"></select></label>
+              <label>筛选
+                <select id="ai-kind" aria-label="AI 参数类别">
+                  <option value="condition">出招条件</option><option value="distance">距离条件</option>
+                  <option value="guard">防御／退避概率</option><option value="skill">必杀概率</option>
+                  <option value="random">其他随机条件</option><option value="time">反应与计时</option>
+                  <option value="all">全部指令</option>
+                </select>
+              </label>
+            </div>
+            <input id="ai-search" type="search" placeholder="搜索条件、按键或地址" aria-label="搜索 AI 脚本">
+            <p id="ai-count" class="panel-note"></p>
+            <div class="table-wrap panel-table">
+              <table aria-label="AI 脚本指令">
+                <thead><tr><th>脚本</th><th>条件／操作</th><th>参数</th><th>后续输入</th><th>EBOOT 地址</th></tr></thead>
+                <tbody id="ai-rows"></tbody>
+              </table>
+            </div>
+            <form id="ai-form" class="event-detail" hidden>
+              <h3 id="ai-rule"></h3>
+              <p id="ai-original" class="panel-note"></p>
+              <div id="ai-controls" class="property-inputs"></div>
+              <p id="ai-hint" class="panel-note"></p>
+              <div class="edit-actions">
+                <button id="ai-apply" class="primary" type="submit">应用到工程</button>
+                <button id="ai-reset" type="button">恢复原值</button>
+              </div>
+            </form>
+          </section>
+          <section id="overview-panel" class="work-panel" hidden>
+            <div class="event-detail"><h3 id="overview-title"></h3><dl id="overview-fields" class="properties"></dl></div>
+            <label class="editor-field">角色备注 <textarea id="role-note" rows="8" placeholder="保存在工程中"></textarea></label>
+            <button id="save-note" class="primary" type="button">保存备注</button>
+          </section>
+          <section id="attributes-panel" class="work-panel" hidden>
+            <div class="table-wrap panel-table"><table aria-label="角色生命分段属性">
+              <thead><tr><th>生命比例</th><th>攻击 Q12</th><th>受伤 Q12</th><th>回气倍率</th><th>地面移动倍率</th></tr></thead>
+              <tbody id="attribute-rows"></tbody></table></div>
+            <form id="attribute-form" class="event-detail" hidden>
+              <h3 id="attribute-band"></h3>
+              <div class="property-inputs">
+                <label>攻击原值<input id="attack-value" aria-label="攻击原值" type="text" required></label>
+                <label>受伤原值<input id="defense-value" aria-label="受伤原值" type="text" required></label>
+                <label>回气倍率<input id="regen-value" type="number" step="any" required></label>
+                <label title="按当前生命分段调整前后步行、冲刺和跑动动作的推进速度">地面移动倍率<input id="walk-value" type="number" step="any" required></label>
+              </div>
+              <p id="attribute-analysis" class="panel-note"></p>
+              <div class="edit-actions"><button class="primary" type="submit">应用到工程</button>
+                <button id="restore-attributes" type="button">重置此段</button></div>
+            </form>
+            <form id="energy-form" class="event-detail" hidden>
+              <h3>技能能量消耗</h3>
+              <div class="property-inputs">
+                <label>通用能量值<input id="energy-0" type="number" min="0" step="any" required></label>
+                <label>一档耗能<input id="energy-1" type="number" min="0" step="any" required></label>
+                <label>二档耗能<input id="energy-2" type="number" min="0" step="any" required></label>
+                <label>三档耗能<input id="energy-3" type="number" min="0" step="any" required></label>
+              </div>
+              <p class="panel-note">三档技能按对应数值检查并扣气，填 0 可免除该档耗能。通用值同时参与部分招式的半额门槛和回能计算。</p>
+              <div class="edit-actions"><button class="primary" type="submit">应用到工程</button>
+                <button id="energy-reset" type="button">恢复镜像值</button></div>
+            </form>
+          </section>
+          <section id="linked-panel" class="work-panel" hidden>
+            <input id="linked-search" type="search" placeholder="搜索名称、状态或片段" aria-label="搜索当前列表">
+            <div class="table-wrap panel-table"><table aria-label="原生动作绑定">
+              <thead><tr><th>名称</th><th>状态</th><th>ANM</th><th>基础伤害</th><th>末帧</th><th>原始记录地址</th></tr></thead>
+              <tbody id="linked-rows"></tbody></table>
+              <p id="linked-empty" class="empty">没有匹配的动作</p>
+            </div>
+            <form id="linked-detail" class="event-detail" hidden>
+              <h3 id="linked-title"></h3>
+              <dl id="linked-fields" class="properties"></dl>
+              <div id="linked-phases" class="edit-actions" hidden>
+                <label>招式分段 <select id="linked-phase"></select></label>
+                <button type="button" id="edit-linked-phase">编辑本段帧事件</button>
+              </div>
+              <label id="linked-name-label" class="editor-field">必杀技名称 <input id="linked-name" type="text" maxlength="80"></label>
+              <label class="inline-field" id="linked-clip-label">默认 ANM 片段<input id="linked-clip" type="number" min="0" max="65534" step="1" required></label>
+              <div class="edit-actions">
+                <button id="apply-linked" type="submit" class="primary">应用到工程</button>
+                <button id="restore-linked" type="button">重置此记录</button>
+                <button id="jump-linked-event" type="button">查看帧事件</button>
+                <button id="linked-apply-name" type="button">保存名称</button>
+              </div>
+            </form>
+            <section id="linked-battle" class="event-detail" hidden>
+              <div class="property-inputs">
+                <label class="editor-field">预览对手 <select id="linked-opponent"></select></label>
+                <label class="editor-field">镜头曲线 <select id="linked-camera"></select></label>
+              </div>
+              <div class="edit-actions">
+                <button id="linked-play-battle" class="primary" type="button">同步预览</button>
+                <button id="linked-stop-battle" type="button" disabled>返回动作预览</button>
+              </div>
+              <details id="linked-scene">
+                <summary>演出时间轴</summary>
+                <p id="linked-scene-current"></p>
+                <div id="linked-scene-textures" class="scene-textures"></div>
+                <div id="linked-scene-events" class="scene-event-list"></div>
+              </details>
+              <details id="linked-assign">
+                <summary>配置给其他角色</summary>
+                <div class="property-inputs">
+                  <label class="editor-field">目标角色 <select id="linked-recipient"></select></label>
+                  <label class="editor-field">目标动作 <select id="linked-recipient-move"></select></label>
+                </div>
+                <button id="linked-send-move" class="primary" type="button" disabled>应用配招到工程</button>
+              </details>
+            </section>
+          </section>
+          <section id="commands-panel" class="work-panel" hidden>
+            <div class="segmented" id="command-modes">
+              <button type="button" data-command-mode="branches" aria-pressed="true" class="active">状态与输入</button>
+              <button type="button" data-command-mode="windows" aria-pressed="false">连段窗口</button>
+              <button type="button" data-command-mode="input" aria-pressed="false">原生按键表</button>
+            </div>
+            <div class="table-wrap panel-table"><table aria-label="按键与连段">
+              <thead id="command-head"></thead><tbody id="command-rows"></tbody></table>
+              <p id="command-empty" class="empty" hidden>当前动作没有连段窗口</p>
+            </div>
+            <div class="event-detail" id="command-detail" hidden><dl id="command-fields" class="properties"></dl></div>
+            <button type="button" id="reset-command-state">回到状态 0</button>
+          </section>
+          <section id="geometry-panel" class="work-panel" hidden>
+            <div class="table-wrap panel-table"><table aria-label="BOM 判定模板">
+              <thead><tr><th>模板</th><th>形状</th><th>半径</th><th>BOM 内偏移</th></tr></thead>
+              <tbody id="geometry-rows"></tbody></table></div>
+            <form id="geometry-detail" class="event-detail" hidden>
+              <h3 id="geometry-title"></h3><div id="geometry-values" class="property-inputs"></div>
+              <div class="edit-actions"><button class="primary" type="submit">应用模板</button>
+                <button id="restore-geometry" type="button">重置模板</button>
+                <button id="preview-geometry" type="button">跳到当前动作判定</button></div>
+            </form>
+          </section>
+          <section id="music-panel" class="work-panel" hidden>
+            <div class="table-wrap"><table aria-label="角色开战曲">
+              <thead><tr><th>使用位置</th><th>BGM</th><th>YUM 成员</th><th>时长</th></tr></thead>
+              <tbody id="music-default"></tbody></table></div>
+            <div class="event-detail music-player">
+              <div class="editor-controls"><h3 id="music-title">选择曲目</h3><span id="music-time" class="mono">00:00 / 00:00</span></div>
+              <input id="music-scrub" type="range" min="0" max="0" value="0" step="any" aria-label="音乐进度" disabled>
+              <div class="edit-actions">
+                <button id="play-music" class="primary" type="button">试听曲目</button>
+                <button id="pause-music" type="button">暂停 / 继续</button>
+                <button id="stop-music" type="button">停止</button>
+                <button id="export-music" type="button">导出 WAV</button>
+              </div>
+              <div class="music-controls"><label class="loop"><input id="music-loop" type="checkbox" checked>循环试听</label>
+                <label for="music-volume">音量</label><input id="music-volume" type="range" min="0" max="1" step="0.01" value="0.7"></div>
+            </div>
+            <label class="editor-field">原镜像 ATRAC 曲库<select id="music-library"></select></label>
+          </section>
+          <section id="shared-resources" class="work-panel" hidden></section>
+          <section id="mix-panel" class="work-panel" hidden>
+            <div class="segmented pane-selector" role="group" aria-label="配招">
+              <button type="button" data-mix-tab="local">本盘配招</button>
+              <button type="button" data-mix-tab="exchange">动作移植</button>
+              <button type="button" data-mix-tab="history">已应用</button>
+            </div>
+            <form id="mix-form" class="event-detail" data-mix-pane="local">
+              <div class="field-grid">
+                <label class="editor-field">目标动作<select id="mix-target"></select></label>
+                <label class="editor-field">来源角色<select id="mix-donor"></select></label>
+                <label class="editor-field">来源动作<select id="mix-source"></select></label>
+              </div>
+              <div class="edit-actions">
+                <button id="mix-apply" class="primary" type="submit">应用到工程</button>
+                <button id="mix-preview" type="button">预览目标动作</button>
+                <button id="mix-combos" type="button">连段片段配招</button>
+              </div>
+              <p id="mix-status" class="muted" aria-live="polite"></p>
+            </form>
+            <div id="kgf-exchange" data-mix-pane="exchange" hidden></div>
+            <div class="mix-pane" data-mix-pane="history" hidden>
+              <p id="mix-empty" class="empty">当前角色暂无配招。</p>
+              <div id="mix-history-table" class="table-wrap panel-table" hidden>
+                <table aria-label="该角色的配招"><thead><tr><th>目标状态</th><th>来源角色</th><th>来源状态</th></tr></thead>
+                <tbody id="mix-rows"></tbody></table>
+              </div>
+              <div class="edit-actions"><button id="mix-restore" type="button" hidden>还原所选配招</button></div>
+            </div>
+          </section>
+          <section id="changes-panel" class="work-panel" hidden>
+            <div class="event-detail"><h3>当前工程</h3><dl id="change-fields" class="properties"></dl></div>
+          </section>
+          <div id="asset-panel" hidden>
+            <div id="appearance-table" class="table-wrap">
+              <table aria-label="当前形态的模型和贴图">
+                <thead><tr><th>资源</th><th>YUM</th><th>规格</th></tr></thead>
+                <tbody id="asset-rows"></tbody>
+              </table>
+            </div>
+            <p id="asset-empty" class="empty">请选择角色或动作</p>
+            <div id="asset-detail" class="event-detail" hidden>
+              <h3 id="asset-title"></h3>
+              <dl id="asset-fields" class="properties"></dl>
+              <label id="asset-palette-row" class="asset-palette" for="asset-palette" hidden>
+                PNG 色表<select id="asset-palette"></select>
+              </label>
+              <p id="asset-note" class="asset-note" hidden></p>
+              <div class="edit-actions asset-actions">
+                <button id="import-asset" class="primary" type="button">导入替换</button>
+                <button id="import-palette" type="button" hidden>只换色表</button>
+                <button id="import-fe3-model" type="button" hidden>从奥3导入模型</button>
+                <button id="export-asset" type="button">导出</button>
+                <button id="export-texture-png" type="button" hidden>导出 PNG</button>
+                <button id="restore-asset" type="button">还原</button>
+              </div>
+            </div>
+            <div id="texture-preview" class="texture-preview" hidden><img id="texture-image" alt="所选色表的贴图"></div>
+            <section id="keys-panel" class="work-panel" hidden>
+              <div class="event-detail">
+                <label class="inline-field">动作别名<input id="action-alias" type="text" placeholder="保存在工程中"></label>
+                <div class="edit-actions"><button id="save-alias" type="button">保存别名</button></div>
+              </div>
+              <form class="event-detail" id="animation-timing">
+                <h3>原生播放参数</h3>
+                <div class="property-inputs">
+                  <label>动作总帧数<input id="animation-frames" type="number" min="1" max="32767" required></label>
+                  <label>ANM 速率<input id="animation-rate" type="number" step="any" min="0.000001" required></label>
+                  <label>根轨道水平位移倍率<input id="animation-horizontal" type="number" step="any" min="0" value="1" required></label>
+                </div>
+                <div class="edit-actions"><button class="primary" type="submit">应用播放参数</button></div>
+              </form>
+              <div class="event-detail">
+                <h3>骨骼轨道与关键帧</h3>
+                <div class="property-inputs">
+                  <label>轨道<select id="key-track"></select></label>
+                  <label>通道<select id="key-channel"><option value="0">旋转（度）</option><option value="1">位移</option><option value="2">缩放</option></select></label>
+                </div>
+                <div class="table-wrap key-table"><table aria-label="关键帧列表">
+                  <thead><tr><th>帧</th><th>X</th><th>Y</th><th>Z</th></tr></thead><tbody id="key-rows"></tbody></table></div>
+                <div class="edit-actions">
+                  <button id="add-key" type="button">添加关键帧</button>
+                  <button id="delete-key" type="button">删除选中帧</button>
+                  <button id="apply-keys" type="button" class="primary">应用关键帧</button>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div id="event-panel" hidden>
+            <div class="inspector-bar">
+              <div class="segmented" id="scope" aria-label="事件范围">
+                <button type="button" data-scope="frame" class="active" aria-pressed="true">当前帧</button>
+                <button type="button" data-scope="clip" aria-pressed="false">整段</button>
+              </div>
+              <span id="event-count" class="event-count"></span>
+            </div>
+            <div class="table-wrap event-table">
+              <table aria-label="动作关联事件">
+                <thead><tr><th>帧</th><th>事件</th><th>基础伤害</th><th>操作码</th><th>状态</th></tr></thead>
+                <tbody id="event-rows"></tbody>
+              </table>
+              <p id="event-empty" class="empty">请选择动作</p>
+            </div>
+            <div class="event-detail">
+              <h3 id="record-title">事件详情</h3>
+              <form id="event-edit" class="event-edit" hidden>
+                <fieldset id="edit-inputs">
+                  <div id="edit-fields" class="edit-fields"></div>
+                  <div class="edit-actions">
+                    <button id="apply-event" class="primary" type="submit" disabled>应用到预览</button>
+                    <button id="restore-event" type="button" disabled>还原此事件</button>
+                    <button id="audition-event" type="button" hidden>试听音效</button>
+                  </div>
+                </fieldset>
+              </form>
+              <dl id="record-fields" class="properties"></dl>
+              <p id="record-empty" class="empty">选择一条记录查看或编辑参数</p>
+              <details id="raw-details" hidden>
+                <summary>记录字节</summary>
+                <code id="raw-bytes"></code>
+              </details>
+            </div>
+          </div>
+          <div id="source-panel" hidden>
+            <div class="table-wrap panel-table form-bindings"><table aria-label="形态资源绑定">
+              <thead><tr><th>形态</th><th>MDL</th><th>主 ANM</th><th>BOM</th><th>POM 槽</th></tr></thead>
+              <tbody id="binding-rows"></tbody>
+            </table></div>
+            <h3>模型与动作来源</h3>
+            <dl id="source-fields" class="properties"></dl>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <main id="fe3-workspace" class="workspace fe3-workspace" hidden>
+    <aside class="roles" aria-label="格斗进化3角色与形态">
+      <div class="role-head">
+        <h1>角色 / 形态</h1>
+        <input id="fe3-role-search" type="search" placeholder="搜索角色" aria-label="搜索角色">
+      </div>
+      <div id="fe3-roles" class="role-list"></div>
+      <div class="role-controls">
+        <label for="fe3-form">模型形态与部件</label>
+        <select id="fe3-form"></select>
+        <p id="fe3-bind-source" class="role-source"></p>
+      </div>
+    </aside>
+
+    <section class="preview-panel" aria-label="格斗进化3模型与动作">
+      <div class="viewport-shell">
+        <canvas id="fe3-viewport" aria-label="格斗进化3角色 3D 预览"></canvas>
+        <div class="view-heading"><span>3D 预览</span><span>左拖旋转 / 右拖平移 / 滚轮缩放</span></div>
+        <div id="fe3-view-message" class="view-message">请选择角色</div>
+        <div id="fe3-view-stats" class="view-stats"></div>
+      </div>
+      <div class="player-controls">
+        <div id="fe3-view-options" class="view-options">
+          <label><input type="checkbox" data-view="bones">骨架</label>
+          <label><input type="checkbox" data-view="hit">判定</label>
+          <label><input type="checkbox" data-view="wire">线框</label>
+          <label><input type="checkbox" data-view="texture" checked>贴图</label>
+          <label title="关闭后在原地播放，保留上下起伏和重心移动"><input type="checkbox" data-view="root" checked>根位移</label>
+          <label><input type="checkbox" id="fe3-native-rate" checked>原生速率</label>
+        </div>
+        <div class="play-controls">
+          <label class="editor-field">着色 <select id="fe3-shading">
+            <option value="1">顶点法线光照</option><option value="0">原始贴图颜色</option>
+          </select></label>
+          <label class="loop"><input type="checkbox" id="fe3-normals">显示法线线段（抽样）</label>
+        </div>
+        <div class="play-controls">
+          <button id="fe3-play" class="play" type="button" disabled>▶ 播放</button>
+          <button id="fe3-back" class="icon-button" type="button" aria-label="上一帧" disabled>‹</button>
+          <button id="fe3-step" class="icon-button" type="button" aria-label="下一帧" disabled>›</button>
+          <select id="fe3-speed" aria-label="播放速度">
+            <option value="0.25">0.25×</option><option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option>
+          </select>
+          <label class="loop"><input type="checkbox" id="fe3-loop" checked>循环</label>
+          <button id="fe3-camera" class="reset" type="button">复位相机</button>
+        </div>
+        <div class="timeline">
+          <div class="track">
+            <input id="fe3-scrub" type="range" min="0" max="0" step="any" value="0" aria-label="动作时间轴" disabled>
+            <div id="fe3-markers" class="track-markers" aria-label="事件帧"></div>
+          </div>
+          <div class="frame-current">
+            <input id="fe3-frame" type="number" min="0" max="0" value="0" aria-label="跳转到帧" disabled>
+            <span>/ <span id="fe3-last-frame">0</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="moves">
+        <div class="move-filter">
+          <input id="fe3-move-search" type="search" placeholder="搜索 ANM、状态、招式或输入（双击播放）" aria-label="搜索动作">
+          <button id="fe3-combos" type="button" aria-pressed="false">连招</button>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="格斗进化3动作列表">
+            <thead><tr><th>ANM</th><th>动作名 / 用途</th><th>帧</th><th>基础伤害</th><th>事件</th></tr></thead>
+            <tbody id="fe3-moves"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="editor" aria-label="格斗进化3编辑工作区">
+      <div class="editor-head">
+        <div class="editor-controls">
+          <div class="crumb">格斗进化3 <span>/</span> <b id="fe3-category"></b></div>
+          <div class="editor-buttons">
+            <button id="fe3-toggle-help" type="button" aria-expanded="false">显示说明</button>
+            <button id="fe3-toggle-nav" type="button" aria-expanded="true">收起导航</button>
+          </div>
+        </div>
+        <div class="editor-title">
+          <h2 id="fe3-editor-title">角色总览</h2>
+          <div class="frame-label">帧 <strong id="fe3-editor-frame">—</strong></div>
+        </div>
+        <div class="editor-controls">
+          <div id="fe3-context" class="editor-context"></div>
+          <span class="readonly"><span aria-hidden="true"></span>原镜像只读</span>
+        </div>
+      </div>
+      <div id="fe3-editor-body" class="editor-body">
+        <nav id="fe3-sections" class="sections" aria-label="格斗进化3编辑功能">
+          <input id="fe3-feature-search" type="search" placeholder="查找功能 · Ctrl+K" aria-label="查找功能">
+        </nav>
+        <div class="inspector fe3-inspector">
+          <p id="fe3-help" class="panel-note" hidden></p>
+          <section id="fe3-overview" class="work-panel">
+            <div class="event-detail"><dl id="fe3-overview-info" class="properties"></dl></div>
+            <p id="fe3-render-note" class="panel-note"></p>
+          </section>
+          <section id="fe3-bindings" class="work-panel" hidden>
+            <div class="table-wrap panel-table">
+              <table aria-label="原生模型形态配置">
+                <thead><tr><th>槽</th><th>MDL</th><th>VAU</th><th>BOM</th><th>贴图成员</th></tr></thead>
+                <tbody id="fe3-bindings-rows"></tbody>
+              </table>
+            </div>
+            <form id="fe3-binding-edit" class="event-detail">
+              <h3 id="fe3-binding-name"></h3>
+              <details><summary>查看来源信息</summary><dl id="fe3-binding-info" class="properties"></dl></details>
+              <div id="fe3-binding-fields" class="property-inputs fe3-form-fields"></div>
+              <div class="edit-actions">
+                <button class="primary" type="submit">应用到工程</button>
+                <button id="fe3-binding-restore" type="button">重置此记录</button>
+              </div>
+            </form>
+          </section>
+          <section id="fe3-resource-panel" class="work-panel" hidden>
+            <div class="move-filter">
+              <input id="fe3-search" type="search" placeholder="资源编号、路径或名称" aria-label="搜索资源">
+              <select id="fe3-kind" aria-label="资源类型">
+                <option value="">全部类型</option><option value="mdl">MDL</option><option value="pom">POM</option>
+                <option value="anm">ANM</option><option value="bom">BOM</option><option value="fum">FUM</option>
+                <option value="vau">VAU</option><option value="bin">BIN</option>
+              </select>
+            </div>
+            <div class="table-wrap panel-table fe3-resources">
+              <table aria-label="格斗进化3资源表">
+                <thead><tr><th>资源 / 子项</th><th>路径</th><th>格式</th></tr></thead>
+                <tbody id="fe3-rows"></tbody>
+              </table>
+            </div>
+            <div class="fe3-pages">
+              <button id="fe3-prev" type="button">上一页</button><span id="fe3-count"></span>
+              <button id="fe3-next" type="button">下一页</button>
+            </div>
+          </section>
+
+          <section id="fe3-asset-detail" class="work-panel" hidden>
+            <p id="fe3-empty" class="empty">请选择一条资源</p>
+            <div id="fe3-resource" class="event-detail" hidden>
+              <h3 id="fe3-name"></h3>
+              <dl id="fe3-info" class="properties"></dl>
+              <div class="edit-actions">
+                <button id="fe3-import" class="primary" type="button">导入替换</button>
+                <button id="fe3-export" type="button">导出原生</button>
+                <button id="fe3-restore" type="button">还原资源</button>
+              </div>
+              <div id="fe3-pom" hidden>
+                <div class="edit-actions fe3-pom-options">
+                  <label>色表 <select id="fe3-palette" aria-label="PS2 POM 色表"></select></label>
+                  <label><input id="fe3-clut-only" type="checkbox"> 只换色表 RGB</label>
+                  <button id="fe3-export-png" type="button">导出 PNG</button>
+                </div>
+                <div class="fe3-image"><img id="fe3-texture" alt="PS2 贴图预览" hidden></div>
+              </div>
+              <p id="fe3-resource-note" class="panel-note"></p>
+            </div>
+            <form id="fe3-anm" class="event-detail" hidden>
+              <h3>动作信息与文件</h3>
+              <p id="fe3-clip-source" class="panel-note"></p>
+              <div class="edit-actions">
+                <input id="fe3-alias" type="text" placeholder="动作别名，仅存工程" aria-label="动作别名">
+                <button id="fe3-save-alias" type="button">保存别名</button>
+              </div>
+              <div class="edit-actions">
+                <button id="fe3-export-clip" type="button">导出单个 ANM</button>
+                <button id="fe3-import-clip" type="button">替换当前 ANM</button>
+                <button id="fe3-restore-bank" type="button">还原动画包</button>
+              </div>
+              <label class="editor-field">片段 <select id="fe3-clip"></select></label>
+              <div class="property-inputs fe3-form-fields">
+                <label>标称帧数<input id="fe3-frames" type="number" min="0" max="65535" step="1" required></label>
+                <label>首帧<input id="fe3-first" type="number" min="-32768" max="32767" step="1" required></label>
+                <label>末帧覆盖<input id="fe3-last" type="number" min="-32768" max="32767" step="1" required></label>
+                <label>速率<input id="fe3-rate" type="number" step="any" required></label>
+              </div>
+              <button class="primary" type="submit">应用播放参数</button>
+            </form>
+            <form id="fe3-keys" class="event-detail" hidden>
+              <div class="move-filter">
+                <label class="editor-field">轨道 <select id="fe3-track"></select></label>
+                <label class="editor-field">分量 <select id="fe3-channel">
+                  <option value="0">旋转（弧度）</option><option value="1">平移</option><option value="2">缩放</option>
+                </select></label>
+              </div>
+              <div class="table-wrap panel-table fe3-key-table">
+                <table aria-label="轨道关键帧">
+                  <thead><tr><th>帧</th><th>X</th><th>Y</th><th>Z</th></tr></thead>
+                  <tbody id="fe3-key-rows"></tbody>
+                </table>
+              </div>
+              <div class="property-inputs fe3-form-fields">
+                <label>帧<input id="fe3-key-frame" type="number" min="0" step="any" required></label>
+                <label>X<input id="fe3-key-x" type="number" step="any" required></label>
+                <label>Y<input id="fe3-key-y" type="number" step="any" required></label>
+                <label>Z<input id="fe3-key-z" type="number" step="any" required></label>
+              </div>
+              <div class="edit-actions">
+                <button id="fe3-add-key" type="button">添加关键帧</button>
+                <button id="fe3-delete-key" type="button">删除所选帧</button>
+                <button class="primary" type="submit">应用关键帧</button>
+              </div>
+            </form>
+            <section id="fe3-compare" class="event-detail" hidden>
+              <h3>攻击与受击对照</h3>
+              <div class="property-inputs">
+                <label>受击角色 <select id="fe3-compare-role"></select></label>
+                <label>动作编号 <input id="fe3-compare-clip" type="number" min="0" step="1" value="0"></label>
+              </div>
+              <div class="edit-actions">
+                <button id="fe3-compare-play" type="button">预览攻击 + 受击</button>
+                <button id="fe3-compare-close" type="button">关闭受击预览</button>
+              </div>
+            </section>
+            <section id="fe3-bom" class="event-detail" hidden>
+              <h3>BOM 帧事件</h3>
+              <label class="editor-field">脚本 <select id="fe3-script"></select></label>
+            </section>
+          </section>
+
+          <section id="fe3-frame-events" class="work-panel" hidden>
+            <div class="editor-controls">
+              <div class="edit-actions" aria-label="事件范围">
+                <button id="fe3-current" type="button" aria-pressed="false">当前帧</button>
+                <button id="fe3-entire" class="active" type="button" aria-pressed="true">整段</button>
+              </div>
+              <span id="fe3-event-count" class="event-count"></span>
+            </div>
+            <div class="table-wrap panel-table fe3-event-table">
+              <table aria-label="当前动作事件">
+                <thead><tr><th>帧 / 有效范围</th><th>事件</th><th>形态掩码</th><th>基础伤害</th><th>状态</th></tr></thead>
+                <tbody id="fe3-events"></tbody>
+              </table>
+            </div>
+            <p id="fe3-event-empty" class="panel-note" hidden></p>
+            <form id="fe3-event" class="event-detail" hidden>
+              <div class="property-inputs fe3-form-fields">
+                <label>触发帧<input id="fe3-event-frame" type="number" min="-32768" max="32767" step="1" required></label>
+                <label title="低三位对应模型槽 0、1、2。填 7 表示开启这三位。">模型槽掩码<input id="fe3-event-selector" type="number" min="0" max="255" required></label>
+              </div>
+              <div id="fe3-event-params" class="property-inputs fe3-form-fields"></div>
+              <details id="fe3-event-raw" class="panel-note" hidden>
+                <summary>原始数据（只读）</summary>
+                <ul id="fe3-event-raw-values"></ul>
+              </details>
+              <p id="fe3-event-source" class="panel-note"></p>
+              <div class="edit-actions">
+                <button class="primary" type="submit">应用到预览</button>
+                <button id="fe3-event-restore" type="button">重置此事件</button>
+              </div>
+            </form>
+          </section>
+
+          <section id="fe3-command-panel" class="work-panel" hidden>
+            <div id="fe3-input-tabs" class="segmented">
+              <button type="button" data-pane="states">状态与输入</button>
+              <button type="button" data-pane="windows">连续窗口与编辑</button>
+              <button type="button" data-pane="rules">输入识别规则</button>
+              <button type="button" data-pane="usage">当前动作用途</button>
+            </div>
+            <div id="fe3-input-states">
+              <label class="editor-field">当前状态 <select id="fe3-command-source"></select></label>
+              <label class="loop"><input id="fe3-filter-form" type="checkbox" checked>按当前形态排除不适用分支</label>
+              <div class="table-wrap panel-table">
+                <table aria-label="原生输入和连段候选">
+                  <thead><tr><th>输入（默认 PS2 键位）</th><th>目标状态</th><th>默认 ANM</th><th>条件号</th><th>优先级</th><th>列表顺序</th></tr></thead>
+                  <tbody id="fe3-command-rows"></tbody>
+                </table>
+              </div>
+              <div class="edit-actions">
+                <button id="fe3-follow-command" class="primary" type="button">按选中分支推进并预览</button>
+                <button id="fe3-reset-command" type="button">回到状态 0</button>
+              </div>
+              <p id="fe3-command-note" class="panel-note"></p>
+            </div>
+            <div id="fe3-combo-links" class="event-detail" hidden>
+              <h3 id="fe3-combo-from"></h3>
+              <div class="table-wrap panel-table">
+                <table aria-label="当前 ANM 连段接续">
+                  <thead><tr><th>按键</th><th>目标 ANM</th><th>帧窗口</th><th>形态掩码</th></tr></thead>
+                  <tbody id="fe3-combo-rows"></tbody>
+                </table>
+              </div>
+              <form id="fe3-combo-edit" hidden>
+                <div class="property-inputs">
+                  <label>开始帧<input id="fe3-combo-start" type="number" required></label>
+                  <label>持续帧<input id="fe3-combo-duration" type="number" min="0" required></label>
+                  <label>输入<select id="fe3-combo-command"></select></label>
+                  <label>目标 ANM<input id="fe3-combo-target" type="number" min="0" required></label>
+                  <label>模型槽掩码<input id="fe3-combo-mask" type="number" min="0" max="255" required></label>
+                </div>
+                <div class="edit-actions">
+                  <button class="primary" type="submit">应用到工程</button>
+                  <button id="fe3-combo-restore" type="button">重置此记录</button>
+                  <button id="fe3-combo-play" type="button">预览接续动作</button>
+                </div>
+              </form>
+            </div>
+            <div id="fe3-input-rules" hidden>
+              <label class="editor-field">原生输入 <select id="fe3-input-rule"></select></label>
+              <dl id="fe3-rule-info" class="properties"></dl>
+            </div>
+            <dl id="fe3-input-usage" class="properties" hidden></dl>
+          </section>
+
+          <form id="fe3-charge" class="work-panel event-detail" hidden>
+            <h3>超重击后 · 必杀前蓄力</h3>
+            <div class="property-inputs">
+              <label>常规蓄满帧数<input id="fe3-charge-normal" type="number" min="1" step="1" required></label>
+              <label>TAG 模式特殊分支 · 蓄满帧数<input id="fe3-charge-special" type="number" min="1" step="1" required></label>
+            </div>
+            <p class="panel-note">两项对全体角色生效。从零开始计算蓄满 256 点所需的游戏更新帧。每招达到自身门槛时即可选用。</p>
+            <div class="edit-actions"><button class="primary" type="submit">应用到工程</button>
+              <button id="fe3-charge-reset" type="button">恢复镜像值</button></div>
+          </form>
+          <section id="fe3-support" class="work-panel" hidden>
+            <div id="fe3-support-tabs" class="segmented pane-selector" role="group" aria-label="防御与辅助">
+              <button type="button" data-support-group="guard">防御技</button>
+              <button type="button" data-support-group="shoulder">辅助技</button>
+            </div>
+            <p id="fe3-support-empty" class="empty" hidden></p>
+            <div id="fe3-support-table" class="table-wrap panel-table">
+              <table aria-label="当前角色的防御与辅助技">
+                <thead><tr><th>名称</th><th>当前效果</th><th>可用形态</th></tr></thead>
+                <tbody id="fe3-support-rows"></tbody>
+              </table>
+            </div>
+            <form id="fe3-support-edit" class="event-detail" hidden>
+              <label class="editor-field"><span id="fe3-support-label">效果</span><select id="fe3-support-effect"></select></label>
+              <p id="fe3-support-note" class="panel-note"></p>
+              <div class="edit-actions">
+                <button id="fe3-support-apply" class="primary" type="submit">应用到工程</button>
+                <button id="fe3-support-preview" type="button">预览动作</button>
+                <button id="fe3-support-restore" type="button">恢复镜像值</button>
+              </div>
+              <details><summary>来源信息</summary><dl id="fe3-support-source" class="properties"></dl></details>
+            </form>
+            <details id="fe3-support-mix" class="event-detail" hidden>
+              <summary>借用其他角色的技能</summary>
+              <div class="property-inputs fe3-form-fields">
+                <label>移植方式<select id="fe3-support-mix-mode">
+                  <option value="replace">替换所选候选</option>
+                  <option value="add">新增到当前形态</option>
+                </select></label>
+                <label>来源角色<select id="fe3-support-donor"></select></label>
+                <label>来源技能<select id="fe3-support-donor-move"></select></label>
+              </div>
+              <p id="fe3-support-mix-note" class="panel-note" aria-live="polite"></p>
+              <div class="edit-actions">
+                <button id="fe3-support-mix-apply" class="primary" type="button">应用配招</button>
+                <button id="fe3-support-mix-restore" type="button" hidden>还原配招</button>
+              </div>
+            </details>
+          </section>
+          <section id="fe3-skills" class="work-panel" hidden>
+            <div class="table-wrap panel-table">
+              <table aria-label="格斗进化3必杀技配置">
+                <thead><tr><th>编号</th><th>名称</th><th>评级</th><th>状态</th><th>可用形态</th><th>原始记录地址</th></tr></thead>
+                <tbody id="fe3-skill-rows"></tbody>
+              </table>
+            </div>
+            <form id="fe3-skill-edit" class="event-detail" hidden>
+              <h3 id="fe3-skill-name"></h3>
+              <details><summary>查看来源信息</summary><dl id="fe3-skill-source" class="properties"></dl></details>
+              <div id="fe3-skill-fields" class="property-inputs fe3-form-fields"></div>
+              <div class="edit-actions">
+                <button class="primary" type="submit">应用到工程</button>
+                <button id="fe3-skill-restore" type="button">重置此记录</button>
+              </div>
+              <div id="fe3-skill-rating" hidden>
+                <div class="property-inputs fe3-form-fields">
+                  <label><span id="fe3-skill-rating-label">候选评级</span>
+                    <select id="fe3-skill-grade">
+                      <option value="" hidden>—</option>
+                      <option>S</option><option>A</option><option>B</option>
+                      <option>C</option><option>D</option><option>E</option>
+                    </select>
+                  </label>
+                </div>
+                <p id="fe3-skill-rating-note" class="panel-note"></p>
+                <div class="edit-actions">
+                  <button id="fe3-skill-rating-apply" class="primary" type="button">应用评级</button>
+                  <button id="fe3-skill-rating-reset" type="button">恢复评级</button>
+                </div>
+              </div>
+            </form>
+            <div id="fe3-skill-battle" class="event-detail" hidden>
+              <label class="editor-field">预览对手 <select id="fe3-skill-opponent"></select></label>
+              <div class="edit-actions">
+                <button id="fe3-skill-scene" class="primary" type="button">预览必杀演出</button>
+                <button id="fe3-skill-preview" type="button">播放单段 ANM</button>
+                <button id="fe3-skill-stop" type="button">返回动作预览</button>
+              </div>
+            </div>
+            <div id="fe3-skill-actions" class="edit-actions">
+              <button id="fe3-skill-add" class="primary" type="button">新增必杀技</button>
+              <button id="fe3-skill-mix" type="button">进入配招</button>
+            </div>
+            <div id="fe3-skill-media">
+              <div id="fe3-scene-media" class="event-detail" hidden>
+                <video id="fe3-effect-video" preload="auto" muted playsinline hidden></video>
+                <label class="inline-field"><input id="fe3-show-ipu" type="checkbox" checked>原版 IPU 特效</label>
+                <details><summary>演出时间轴</summary><div id="fe3-skill-scene-events"></div></details>
+              </div>
+            </div>
+          </section>
+
+          <section id="fe3-mix" class="work-panel" hidden>
+            <div class="segmented pane-selector" role="group" aria-label="配招">
+              <button type="button" data-mix-tab="local">必杀配招</button>
+              <button type="button" data-mix-tab="exchange">动作移植</button>
+              <button type="button" data-mix-tab="history">已应用</button>
+            </div>
+            <div class="mix-pane" data-mix-pane="local">
+              <form id="fe3-mix-edit" class="event-detail">
+                <div class="property-inputs fe3-form-fields mix-fields">
+                  <label>配招方式 <select id="fe3-mix-mode">
+                    <option value="add">新增必杀技</option>
+                    <option value="replace">替换必杀技</option>
+                  </select></label>
+                  <label id="fe3-mix-target" hidden>目标必杀技 <select id="fe3-mix-target-move"></select></label>
+                  <label id="fe3-mix-form-label">接收形态 <select id="fe3-mix-form"></select></label>
+                  <label>来源角色 <select id="fe3-skill-donor"></select></label>
+                  <label>来源必杀技 <select id="fe3-skill-donor-move"></select></label>
+                </div>
+                <div class="edit-actions">
+                  <button id="fe3-mix-apply" class="primary" type="submit">新增到必杀技表</button>
+                  <button id="fe3-mix-preview" type="button">预览来源招式</button>
+                  <button id="fe3-mix-copy" type="button" hidden>复制必杀参数</button>
+                  <button id="fe3-mix-stop" type="button" hidden>结束预览</button>
+                </div>
+                <details>
+                  <summary>预览设置</summary>
+                  <label class="editor-field">预览对手 <select id="fe3-mix-opponent"></select></label>
+                </details>
+                <p id="fe3-mix-note" class="panel-note"></p>
+              </form>
+              <div id="fe3-mix-media"></div>
+            </div>
+            <div id="fe3-exchange" data-mix-pane="exchange" hidden></div>
+            <div class="mix-pane" data-mix-pane="history" hidden>
+              <p id="fe3-mix-empty" class="empty">当前角色暂无配招。</p>
+              <div id="fe3-mix-history-table" class="table-wrap panel-table" hidden>
+                <table aria-label="配招记录">
+                  <thead><tr><th>名称</th><th>方式</th><th>来源</th><th>状态 / ANM</th></tr></thead>
+                  <tbody id="fe3-mix-rows"></tbody>
+                </table>
+              </div>
+              <div class="edit-actions"><button id="fe3-mix-reset" type="button" hidden>还原所选配招</button></div>
+            </div>
+          </section>
+
+          <section id="fe3-throws" class="work-panel" hidden>
+            <label class="editor-field">对手 <select id="fe3-throw-opponent"></select></label>
+            <label class="editor-field">镜头曲线 <select id="fe3-throw-curve"></select></label>
+            <div id="fe3-throw-tabs" class="segmented">
+              <button type="button" data-pane="stages">抓取阶段与动画</button>
+              <button type="button" data-pane="selection">投技选择与挣脱</button>
+              <button type="button" data-pane="range">抓取判定与范围</button>
+              <button type="button" data-pane="camera">投技与镜头引用</button>
+              <button type="button" data-pane="banks">角色组关联片段</button>
+            </div>
+            <div class="table-wrap panel-table">
+              <table aria-label="原生抓取与投技动作">
+                <thead><tr id="fe3-throw-head"></tr></thead>
+                <tbody id="fe3-throw-rows"></tbody>
+              </table>
+            </div>
+            <form id="fe3-throw-edit" class="event-detail" hidden>
+              <h3 id="fe3-throw-name"></h3>
+              <details><summary>查看来源信息</summary><dl id="fe3-throw-source" class="properties"></dl></details>
+              <label id="fe3-throw-default-label" class="editor-field">此阶段默认动画编号
+                <input id="fe3-throw-default" type="number" min="0" step="1" required>
+              </label>
+              <div class="edit-actions">
+                <button id="fe3-throw-apply" class="primary" type="submit">应用到工程</button>
+                <button id="fe3-throw-restore" type="button">重置此记录</button>
+                <button id="fe3-throw-preview" type="button">同步预览当前阶段</button>
+              </div>
+              <div id="fe3-throw-scene-events"></div>
+            </form>
+            <button id="fe3-throw-export" type="button">导出当前角色抓取分析 JSON</button>
+          </section>
+
+          <form id="fe3-hp" class="work-panel event-detail" hidden>
+            <h3>生命 / 防御</h3>
+            <div class="property-inputs">
+              <label>原生表 <select id="fe3-hp-kind"><option value="form">形态承伤</option><option value="band">生命分段承伤</option></select></label>
+              <label>原生表项 <select id="fe3-hp-band"></select></label>
+              <label>Q7 原始倍率 <input id="fe3-hp-value" type="number" min="0" max="32767" step="1" required></label>
+              <label>等效生命 / 耐久 <input id="fe3-hp-summary" type="number" min="1" step="any"></label>
+            </div>
+            <p id="fe3-hp-source" class="panel-note"></p>
+            <div class="edit-actions">
+              <button class="primary" type="submit">应用承伤倍率</button>
+              <button id="fe3-hp-restore" type="button">恢复原值</button>
+            </div>
+          </form>
+          <section id="fe3-batch" class="work-panel event-detail" hidden>
+            <h3>批量作用范围</h3>
+            <label class="editor-field">动作编号 <input id="fe3-batch-range" type="text" placeholder="留空为全部主动作，例如 0-20,30,40"></label>
+            <div class="property-inputs">
+              <label>攻击伤害倍率 <input id="fe3-batch-damage" type="number" min="0" step="any" value="1"></label>
+              <label>动作播放速度倍率 <input id="fe3-batch-speed" type="number" min="0.000001" step="any" value="1"></label>
+              <label>根轨道水平位移倍率 <input id="fe3-batch-travel" type="number" min="0" step="any" value="1"></label>
+            </div>
+            <div class="edit-actions" id="fe3-batch-actions">
+              <button type="button" data-batch="inspect">查看伤害改动</button>
+              <button class="primary" type="button" data-batch="damage">应用攻击伤害</button>
+              <button class="primary" type="button" data-batch="speed">应用动作速度</button>
+              <button class="primary" type="button" data-batch="travel">应用水平位移</button>
+            </div>
+            <dl id="fe3-batch-results" class="properties"></dl>
+          </section>
+          <form id="fe3-jump" class="work-panel event-detail" hidden>
+            <h3>跳跃 / 重力（原生角色表）</h3>
+            <div class="property-inputs">
+              <label>跳跃初速度<input id="fe3-jump-launch" type="number" min="0" step="any" required></label>
+              <label>重力<input id="fe3-jump-gravity" type="number" step="any" required></label>
+            </div>
+            <dl id="fe3-jump-info" class="properties"></dl>
+            <div class="edit-actions">
+              <button class="primary" type="submit">应用跳跃 / 重力</button>
+              <button id="fe3-jump-restore" type="button">读取源镜像数值</button>
+            </div>
+          </form>
+          <section id="fe3-states" class="work-panel" hidden>
+            <div class="table-wrap panel-table">
+              <table aria-label="原生动作状态">
+                <thead><tr><th>状态</th><th>默认 ANM</th><th>后续状态</th><th>原始标志</th></tr></thead>
+                <tbody id="fe3-state-rows"></tbody>
+              </table>
+            </div>
+          </section>
+          <section id="fe3-report" class="work-panel event-detail" hidden>
+            <dl id="fe3-report-info" class="properties"></dl>
+          </section>
+
+          <section id="fe3-music" class="work-panel" hidden>
+            <div class="table-wrap panel-table">
+              <table aria-label="角色音乐">
+                <thead><tr><th>用途</th><th>BGM</th><th>资源</th><th>时长</th></tr></thead>
+                <tbody id="fe3-music-rows"></tbody>
+              </table>
+            </div>
+            <div class="event-detail">
+              <dl id="fe3-music-info" class="properties"></dl>
+              <label class="editor-field">原盘曲库 <select id="fe3-music-track"></select></label>
+              <div class="edit-actions fe3-form-fields">
+                <button id="fe3-music-play" class="primary" type="button">试听选中曲目</button>
+                <button id="fe3-music-pause" type="button">暂停 / 继续</button>
+                <button id="fe3-music-stop" type="button">停止 / 取消解码</button>
+                <button id="fe3-music-export" type="button">导出 WAV</button>
+              </div>
+              <label class="loop"><input id="fe3-music-loop" type="checkbox">循环试听</label>
+              <audio id="fe3-audio" controls preload="none"></audio>
+              <p id="fe3-music-note" class="panel-note"></p>
+            </div>
+          </section>
+          <section id="fe3-shared-resources" class="work-panel" hidden></section>
+        </div>
+      </div>
+    </section>
+  </main>
+  <template id="exchange-template">
+    <form class="event-detail">
+      <div class="edit-actions">
+        <button type="button" data-open>打开来源 ISO</button>
+        <button type="button" data-current>使用当前镜像作来源</button>
+      </div>
+      <p class="panel-note" data-source></p>
+      <div class="property-inputs fe3-form-fields">
+        <label>移植内容 <select data-mode>
+          <option value="hit">普通攻击与连段 · 动作和判定</option>
+          <option value="all">一键替换角色全部动作</option>
+          <option value="skill">必杀 · 替换施放动作</option>
+          <option value="motion">非攻击动作 · 待机、移动、防御等</option>
+          <option value="model">奥3模型和贴图 → 奥0</option>
+        </select></label>
+        <label>来源角色 <select data-role></select></label>
+        <label>来源配置 <select data-config></select></label>
+        <label>来源形态 <select data-shape></select></label>
+        <label data-origin-field>来源动作 <select data-origin></select></label>
+        <label data-receiver-field>目标动作 <select data-receiver></select></label>
+      </div>
+      <p class="panel-note" data-note></p>
+      <details data-set-panel hidden>
+        <summary>动作对照与手动改选</summary>
+        <div class="property-inputs">
+          <label>目标片段 <select data-set-target></select></label>
+          <label>替换为 <select data-set-source></select></label>
+        </div>
+        <p class="panel-note" data-set-reason></p>
+      </details>
+        <details data-voice-panel hidden>
+          <summary>战吼</summary>
+          <div class="edit-actions">
+            <select data-voice aria-label="当前动作的战吼"></select>
+            <button type="button" data-listen disabled>试听</button>
+            <button type="button" data-wav>选择 WAV</button>
+            <button type="button" data-apply-voice disabled>只改战吼</button>
+          </div>
+        </details>
+      <details class="combo-routes" data-routes hidden>
+        <summary>来源动作的其他触发路径</summary>
+        <div data-route-text></div>
+      </details>
+      <div class="edit-actions">
+        <button class="primary" type="submit" data-apply disabled>应用到工程</button>
+      </div>
+    </form>
+  </template>
+  <template id="shared-resource-template">
+    <div class="timeline-toolbar shared-resource-filters">
+      <label class="editor-field">类型<select data-kind><option value="bgm">BGM</option><option value="texture">贴图</option></select></label>
+      <label class="editor-field">筛选<input type="search" data-query placeholder="名称、资源编号或组号"></label>
+    </div>
+    <div class="table-wrap panel-table">
+      <table aria-label="通用资源"><thead><tr><th>位置</th><th>名称</th><th>格式</th></tr></thead>
+        <tbody data-rows></tbody></table>
+    </div>
+    <div class="edit-actions shared-resource-pages">
+      <button type="button" data-prev>上一页</button><span class="muted" data-count></span><button type="button" data-next>下一页</button>
+    </div>
+    <div class="event-detail" data-detail hidden>
+      <h3 data-title></h3>
+      <dl class="properties" data-info></dl>
+      <div data-audio-tools hidden>
+        <div class="edit-actions">
+          <button type="button" data-play>试听</button>
+          <button type="button" data-stop>停止</button>
+          <button type="button" data-wav>导出 WAV</button>
+        </div>
+        <audio data-player controls preload="none" hidden></audio>
+        <div class="edit-actions">
+          <label class="editor-field">镜像内来源曲目<select data-donor></select></label>
+          <button type="button" data-copy>使用此曲目替换</button>
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="primary" data-import>导入替换</button>
+        <button type="button" data-recolor hidden>只换色表</button>
+        <button type="button" data-native>导出原生</button>
+        <button type="button" data-png>导出 PNG</button>
+        <button type="button" data-restore>还原资源</button>
+        <label class="editor-field" data-palette-field>色表<select data-palette></select></label>
+      </div>
+      <div class="asset-preview shared-resource-preview" data-image-box hidden>
+        <img data-image alt="选中色表的贴图预览">
+      </div>
+    </div>
+  </template>
+  <footer class="statusbar"><span id="status" role="status"></span><span id="footer-source"></span></footer>
+</body>
+</html>
