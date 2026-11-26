@@ -11,13 +11,13 @@ from unittest.mock import patch
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
 from viewer import ViewerApi, open_game
-from editor_readers import ROOT
-from asset_transfer import texture_png
+from ogeditor.readers import ROOT
+from ogeditor.psp.asset_transfer import texture_png
 from kgf_readers.pom_to_png import build_png_rgba
 from kgf_readers.pom_to_tm2 import decode_png
 from move_eboot import BASE, Eboot
-from move_resume import stock_layouts
-from move_sets import Compilation, donor_status
+from ogeditor.psp.move_resume import stock_layouts
+from ogeditor.psp.move_sets import Compilation, donor_status
 from project_file import parse_project, read_manifest, write_project
 
 

@@ -7,15 +7,15 @@ from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
-from workspace_paths import workspace_root
+from ogeditor.paths import workspace_root
 
 from viewer import open_game
-from fe3_formats import Bom
-from fe3_guard import installed_absorptions
-from fe3_native import GUARD_NAMES, GUARD_TYPES, NativeTables, ROLE_COUNT, SHOULDER_ASSIST, SHOULDER_ASSIST_WORD, SHOULDER_SKILLS
-from fe3_preview import clip_index
-from fe3_scene import camera_bank, script_rows
-from fe3_support import ASSIST_WORD, installed_supports, source_choices
+from ogeditor.ps2.formats import Bom
+from ogeditor.ps2.guard import installed_absorptions
+from ogeditor.ps2.native import GUARD_NAMES, GUARD_TYPES, NativeTables, ROLE_COUNT, SHOULDER_ASSIST, SHOULDER_ASSIST_WORD, SHOULDER_SKILLS
+from ogeditor.ps2.preview import clip_index
+from ogeditor.ps2.scene import camera_bank, script_rows
+from ogeditor.ps2.support import ASSIST_WORD, installed_supports, source_choices
 from project_file import parse_project, read_manifest, write_project
 
 

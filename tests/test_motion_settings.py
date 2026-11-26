@@ -5,11 +5,11 @@ from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(APP))
-from workspace_paths import workspace_root
+from ogeditor.paths import workspace_root
 from viewer import Game
-from animation_edit import STORY_CLIPS, read_anm_bank, replace_story_bank
-from fe3_charge import f32, fill_frames, rate_for_frames
-from native_tables import EnergyField
+from ogeditor.psp.animation_edit import STORY_CLIPS, read_anm_bank, replace_story_bank
+from ogeditor.ps2.native import f32, fill_frames, rate_for_frames
+from ogeditor.psp.native_tables import EnergyField
 
 
 class MotionSettings(unittest.TestCase):

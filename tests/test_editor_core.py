@@ -13,12 +13,12 @@ from unittest.mock import Mock, patch
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
-from workspace_paths import workspace_root
+from ogeditor.paths import workspace_root
 import viewer
-from asset_transfer import clip_ids
+from ogeditor.psp.asset_transfer import clip_ids
 from decrypt_enc import build_dfs_file, decode_dfs_enc as reference_decode
-from fe3_dfs import decode_dfs_enc, unpacked_tag
-from fe3_game import FE3Game, Transfers, encode_verified
+from ogeditor.ps2.formats import decode_dfs_enc, unpacked_tag
+from ogeditor.ps2.game import FE3Game, Transfers, encode_verified
 
 
 class DfsTests(unittest.TestCase):
@@ -73,11 +73,11 @@ class DfsTests(unittest.TestCase):
         self.assertEqual(reference_decode(b), bytes(payload))
         self.assertEqual(game._encoded(part, bytes(payload)), b)
         self.assertEqual(game._encode_small.cache_info().hits, 1)
-        with patch('fe3_game.encode_dfs_enc', return_value=a):
+        with patch('ogeditor.ps2.game.encode_dfs_enc', return_value=a):
             with self.assertRaises(ValueError):
                 game._encoded(part, b'other bytes')
         self.assertEqual(game._encode_small.cache_info().currsize, 2)
-        with patch('fe3_game.encode_verified', return_value=b'large') as direct:
+        with patch('ogeditor.ps2.game.encode_verified', return_value=b'large') as direct:
             large = bytes(512 * 1024 + 1)
             self.assertEqual(game._encoded(part, large), b'large')
             direct.assert_called_once_with(large)
@@ -87,11 +87,11 @@ class WorkspaceTests(unittest.TestCase):
     def test_native_readers_load_without_a_window_or_document(self):
         code = (
             "import sys; sys.path.insert(0, sys.argv[1]); "
-            "import move_sets, move_sound, formats, editor_readers; "
+            "from ogeditor.psp import move_sets; from ogeditor import readers as editor_readers; import move_sound, formats; "
             "from kgf_readers.mdl_reader import read_mdl; "
             "assert move_sets.read_mdl is editor_readers.read_mdl is read_mdl; "
             "assert move_sound.bom_parts is move_sets.bom_parts is formats.bom_parts; "
-            "assert 'viewer' not in sys.modules and 'assets' not in sys.modules"
+            "assert 'viewer' not in sys.modules and 'ogeditor.psp.game' not in sys.modules"
         )
         subprocess.run([sys.executable, '-I', '-c', code, str(APP)], check=True, timeout=20)
 
@@ -197,12 +197,12 @@ class WorkspaceTests(unittest.TestCase):
         game.remember(game.saved)
         for redo in (False, True):
             before = game.snapshot(), game.undo.copy(), game.redo.copy()
-            with patch('fe3_game.compile_transfers', side_effect=ValueError('failed')):
+            with patch('ogeditor.ps2.game.compile_transfers', side_effect=ValueError('failed')):
                 with self.assertRaisesRegex(ValueError, 'failed'):
                     game.step_history(redo)
             self.assertEqual((game.snapshot(), game.undo, game.redo), before)
             self.assertIs(game.transfer_plan, plan)
-            with patch('fe3_game.compile_transfers', return_value=plan):
+            with patch('ogeditor.ps2.game.compile_transfers', return_value=plan):
                 game.step_history(redo)
         self.assertEqual(game.native_edits, {12:50})
 

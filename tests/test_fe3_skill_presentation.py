@@ -6,12 +6,12 @@ from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
-from workspace_paths import workspace_root
+from ogeditor.paths import workspace_root
 
 from viewer import open_game
-from fe3_names import atlas_rows
-from fe3_native import RATING_GRADES, rating_grade, rating_value_for_grade
-from fe3_skill_ui import LOADING_NAME_RECTANGLES, LOADING_RECT_POINTERS, description_links
+from ogeditor.ps2.names import atlas_rows
+from ogeditor.ps2.native import RATING_GRADES, rating_grade, rating_value_for_grade
+from ogeditor.ps2.skill_ui import LOADING_NAME_RECTANGLES, LOADING_RECT_POINTERS, description_links
 
 
 BASE = workspace_root(APP) / '01_游戏镜像/格斗进化3/奥特曼格斗进化3.iso'

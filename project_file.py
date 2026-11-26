@@ -8,18 +8,18 @@ from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile
 
 from event_edits import Patch, change_words
 from move_sound import validate_extension, load_sound_members
-from sound_eboot import read_codes
-from fe3_sound import validated as fe3_sound_codes
+from move_sound import read_codes
+from ogeditor.ps2.sound import validated as fe3_sound_codes
 from formats import bom_parts, event_records, read_shape
 from kgf_readers.mdl_reader import read_mdl
-from asset_transfer import compatible_model, pom_layout, replace_texture
+from ogeditor.psp.asset_transfer import compatible_model, pom_layout, replace_texture
 from iso_save import new_output
-from move_sets import Compilation
-from ai_script import load_ai_edits
-from ground_travel import load_rates
-from fe3_game import FE3Game, ROSTER, integer
-from fe3_native import MIN_RATING_VALUE
-from fe3_transfer import compile_transfers
+from ogeditor.psp.move_sets import Compilation
+from ogeditor.psp.ai_script import load_ai_edits
+from ogeditor.psp.ground_travel import load_rates
+from ogeditor.ps2.game import FE3Game, ROSTER, integer
+from ogeditor.ps2.native import MIN_RATING_VALUE
+from ogeditor.ps2.transfer import compile_transfers
 
 
 PROJECT = '.kgfp'

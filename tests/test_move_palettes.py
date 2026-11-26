@@ -7,10 +7,10 @@ from tempfile import TemporaryDirectory
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
-from workspace_paths import workspace_root
+from ogeditor.paths import workspace_root
 
 from viewer import open_game
-from asset_transfer import texture_png
+from ogeditor.psp.asset_transfer import texture_png
 from kgf_readers.pom_to_png import build_png_rgba
 from kgf_readers.pom_to_tm2 import decode_png, get_pom_layout
 from project_file import parse_project, read_manifest, write_project

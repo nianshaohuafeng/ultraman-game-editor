@@ -8,7 +8,7 @@ import numpy as np
 
 from cross_texture import (body_palettes, boot_pom, editable_texture, lamp_palettes, lamp_slots, place_tiles,
                            remap_uvs, retained_slots)
-from fbx_import import joint_track, skin_alignment
+from ogeditor.models.fbx_import import joint_track, skin_alignment
 from kgf_readers.pom_to_tm2 import decode_png, get_pom_layout
 
 

@@ -4,7 +4,7 @@ import json
 import struct
 import zlib
 
-from fe3_formats import require
+from ogeditor.ps2.formats import require
 from formats import s16, u32
 
 # Both native loaders resolve the outer directory relative to the BOM base

@@ -9,7 +9,7 @@ from tempfile import NamedTemporaryFile
 
 from event_edits import Patch
 from formats import u32
-from editor_readers import iso_directory, read_yum
+from ogeditor.readers import iso_directory, read_yum
 
 SECTOR = 2048
 

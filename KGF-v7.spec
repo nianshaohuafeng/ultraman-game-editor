@@ -5,7 +5,7 @@ import sys
 
 app = Path(SPECPATH).resolve()
 sys.path.insert(0, str(app))
-from workspace_paths import editor_data, workspace_root
+from ogeditor.paths import editor_data, workspace_root
 
 workspace = workspace_root(app)
 stage = Path('04_补丁与研究/KGF_v7_阶段1_EBOOT分析')

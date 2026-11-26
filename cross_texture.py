@@ -6,8 +6,8 @@ import struct
 
 import numpy as np
 
-from appearance import MODEL_ROLES, palette_modes
-from fe3_formats import png_for_pom, require
+from ogeditor.psp.appearance import MODEL_ROLES, palette_modes
+from ogeditor.ps2.formats import png_for_pom, require
 from kgf_readers.pom_to_tm2 import (active_palette_for_pom, decode_png, display_palette_from_pom,
                                    extract_pom_texture_data, pack_4bpp_indices, tile_psp_16x8_pixels,
                                    tile_psp_32x8_4bpp_pixels, uses_psp_16x8_tiling, uses_psp_32x8_4bpp_tiling)

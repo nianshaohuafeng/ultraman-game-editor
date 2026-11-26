@@ -8,22 +8,22 @@ import struct
 
 import numpy as np
 
-from animation_edit import STORY_BANKS, protect_story_clip, read_anm_bank
-from asset_transfer import validate_clip
-from assets import selected
-from cross_hands import fe3_hand_clouds, match_hand_events, psp_hand_clouds
+from ogeditor.psp.animation_edit import STORY_BANKS, protect_story_clip, read_anm_bank
+from ogeditor.psp.asset_transfer import validate_clip
+from ogeditor.psp.game import selected
+from ogeditor.transfer.cross_hands import fe3_hand_clouds, match_hand_events, psp_hand_clouds
 from cross_timing import BomTiming
-from fe3_formats import Bom, require
-from fe3_game import FE3Game
-from fe3_preview import read_bones, replace_clip, single_clip
-from fe3_transfer import SHAPE_FIELDS, entry_bytes, script_bytes
+from ogeditor.ps2.formats import Bom, require
+from ogeditor.ps2.game import FE3Game
+from ogeditor.ps2.preview import read_bones, replace_clip, single_clip
+from ogeditor.ps2.transfer import SHAPE_FIELDS, entry_bytes, script_bytes
 from formats import SHAPE_TEMPLATE_OFFSETS, bom_parts, event_records, merge_form_events, read_shape, s16, u32
-from input_notation import SEQUENCE, input_arrows
+from ogeditor.input_notation import SEQUENCE, input_arrows
 from kgf_readers.mdl_reader import read_mdl
-from model_retarget import local_matrix
-from move_sets import pack_script
+from ogeditor.models.model_retarget import local_matrix
+from ogeditor.psp.move_sets import pack_script
 from move_sound import SoundLibrary, SoundTransfer
-from native_tables import THROWS
+from ogeditor.psp.native_tables import THROWS
 
 
 COMBAT_CATEGORIES = frozenset((4, 5, 11))

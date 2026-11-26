@@ -5,12 +5,12 @@ import tempfile
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(APP))
-from workspace_paths import workspace_root
-from assets import Game
-from kgf_scene import battle_preview
+from ogeditor.paths import workspace_root
+from ogeditor.psp.game import Game
+from ogeditor.psp.scene import battle_preview
 from project_file import write_project, read_manifest, parse_project
 from viewer import open_game
-from fe3_formats import Bom
+from ogeditor.ps2.formats import Bom
 
 ROOT = workspace_root(APP)
 V7 = ROOT/'KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso'
@@ -84,7 +84,7 @@ class DamageFields(unittest.TestCase):
             self.assertEqual(args(script,op),tuple(v*2 if i in fields else v for i,v in enumerate(before)))
 
     def test_travel_scales_delta_from_first_pose(self):
-        from fe3_preview import clip_index, key_rows
+        from ogeditor.ps2.preview import clip_index, key_rows
         g=open_game(FE3)
         key, index=g.workbench.binding(0)[1]
         track=clip_index(g.data(key))[index].tracks.index(0)

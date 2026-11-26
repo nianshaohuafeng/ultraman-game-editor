@@ -6,8 +6,8 @@ from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(APP))
-from workspace_paths import workspace_root
-from assets import Game
+from ogeditor.paths import workspace_root
+from ogeditor.psp.game import Game
 from project_file import parse_project, read_manifest, write_project
 
 SOURCE = workspace_root(APP) / "KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso"

@@ -5,6 +5,10 @@
 !/requirements.txt
 !/requirements-build.txt
 !/*.py
+!/ogeditor/
+/ogeditor/**
+!/ogeditor/**/
+!/ogeditor/**/*.py
 !/KGF-v7.spec
 !/KGF-v7.ico
 !/KGF-v7.png

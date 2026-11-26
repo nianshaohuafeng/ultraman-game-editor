@@ -10,20 +10,20 @@ import subprocess
 from threading import Event, RLock
 from zlib import error as PngError
 
-from assets import Game, HERE
-from asset_transfer import write_asset
+from ogeditor.psp.game import Game, HERE
+from ogeditor.psp.asset_transfer import write_asset
 from iso_save import new_output
 from project_file import PACKAGE, PROJECT, ProjectBaseError, parse_project, read_manifest, write_project
-from fe3_game import FE3Game, open_game
-from fe3_audio import audio as fe3_audio, library as fe3_library
-from fe3_movie import movie_preview
-from kgf_scene import battle_preview, camera_options
-from cross_model import convert_model
+from ogeditor.ps2.game import FE3Game, open_game
+from ogeditor.ps2.audio import audio as fe3_audio, library as fe3_library
+from ogeditor.ps2.movie import movie_preview
+from ogeditor.psp.scene import battle_preview, camera_options
+from ogeditor.transfer.cross_model import convert_model
 from cross_move import cross_choices, cross_forms, is_fe3, transfer_move
-from bulk_motion import MotionSet
+from ogeditor.transfer.bulk_motion import MotionSet
 from move_sound import SoundLibrary, wav_voice
-from audio_preview import vag_wave
-from shared_resources import data_uri
+from ogeditor.audio import vag_wave
+from ogeditor.shared_resources import data_uri
 
 
 READ_ERRORS = (OSError, ValueError, IndexError, struct.error, PngError)
@@ -523,7 +523,7 @@ class ViewerApi:
         return self._fe3_call(serial, FE3Game.edit_support_skill, role, candidate, value)
 
     def fe3_support_sources(self, serial, role, candidate, donor, kind=None, shape=None):
-        from fe3_support import source_choices
+        from ogeditor.ps2.support import source_choices
         return self._fe3_call(serial, source_choices, role, candidate, donor, kind, shape)
 
     def fe3_transfer_support_skill(self, serial, role, candidate, donor=None, donor_candidate=None):

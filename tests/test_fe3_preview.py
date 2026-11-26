@@ -6,10 +6,10 @@ import unittest
 
 APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
-from workspace_paths import workspace_root
+from ogeditor.paths import workspace_root
 
 from viewer import open_game
-from fe3_scene import preview_scene_address, scene_address
+from ogeditor.ps2.scene import preview_scene_address, scene_address
 
 
 BASE = workspace_root(APP) / '01_游戏镜像/格斗进化3/奥特曼格斗进化3.iso'
