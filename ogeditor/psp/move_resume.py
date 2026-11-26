@@ -1,4 +1,4 @@
-"""Recover an editable v7 move set from the resources inside an exported ISO."""
+"""Reconstruct editable move assignments when reopening an exported PSP image."""
 
 from collections import Counter
 from functools import lru_cache

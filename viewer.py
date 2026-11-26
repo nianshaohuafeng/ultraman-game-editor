@@ -1,4 +1,4 @@
-"""Desktop resource and timeline editor for KGF v7 and PS2 FE3."""
+"""Launch the desktop editor and connect its preview and editing commands to the window."""
 
 import argparse
 import base64

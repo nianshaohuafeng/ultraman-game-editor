@@ -3,13 +3,13 @@
 from pathlib import Path
 import sys
 
-from ogeditor.paths import editor_data, workspace_root
+from ogeditor.paths import editor_data, psp_reference, workspace_root
 
 
 HERE = Path(__file__).resolve().parents[1]
 
 ROOT = workspace_root(HERE)
-STAGE = ROOT / '04_补丁与研究/KGF_v7_阶段1_EBOOT分析'
+STAGE = psp_reference(ROOT)
 for folder in (STAGE / '证据', ROOT / '02_修改工具/PSP统一工具/Source/ENC'):
     if str(folder) not in sys.path:
         sys.path.insert(0, str(folder))

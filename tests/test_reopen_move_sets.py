@@ -1,4 +1,4 @@
-"""Exercise a second editing session on a v7 ISO, including pre-recovery exports."""
+"""Exercise a second editing session on a PSP ISO, including pre-recovery exports."""
 
 import hashlib
 from pathlib import Path
@@ -45,7 +45,7 @@ def hit(game, role, state):
     return next(row for row in game.motion(role,0,0,state)['events'] if row.get('damage') is not None)
 
 
-@unittest.skipUnless(STOCK.is_file(), '需要本地奥0 v7 镜像')
+@unittest.skipUnless(STOCK.is_file(), '需要本地奥0测试镜像')
 class ReopenMoveSet(unittest.TestCase):
     def test_screenshot_move_reopen_undo_project_and_complete_restore(self):
         base = open_game(STOCK)

@@ -1,4 +1,4 @@
-"""Native v7 code and relocated data emitted when a move set is saved."""
+"""Emit PSP executable patches and relocations for transferred moves."""
 
 from collections import defaultdict
 from copy import deepcopy
@@ -411,7 +411,7 @@ def compiled_layout(raw, layout):
 
 
 def installed_eboot(raw, layout, canonical, *, details=False):
-    """Recover the stock executable bytes used to validate and parse normal v7 data."""
+    """Recover executable bytes and move metadata before validating an edited image."""
     last = layout['segments'][-1]
     end = last['offset'] + last['filesz']
     limit = payload_limit(canonical, layout)

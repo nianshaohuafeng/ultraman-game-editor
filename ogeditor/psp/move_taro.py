@@ -1,4 +1,4 @@
-"""The v7 Taro charge, strike, grab and explosion callbacks."""
+"""Taro's native charge, strike, grab and explosion callbacks."""
 
 from ogeditor.psp.role_effects import clone_vtable
 from move_eboot import (A0, RA, SP, T4, T5, T6, V0, V1, Z, addiu, addu, branch,

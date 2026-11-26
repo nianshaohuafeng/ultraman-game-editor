@@ -1,4 +1,4 @@
-"""Native routines shared by the special move families in KGF v7."""
+"""Shared native callbacks for multi-stage PSP moves."""
 
 from collections import defaultdict
 import struct

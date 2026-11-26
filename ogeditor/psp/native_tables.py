@@ -1,7 +1,9 @@
-"""Fighter, action, input, and music tables used by the v7 EBOOT."""
+"""PSP fighter attributes, action states, command sequences and music bindings."""
 
 from collections import deque
 from dataclasses import dataclass
+import csv
+import json
 import hashlib
 import math
 import struct
@@ -291,3 +293,30 @@ def riff_duration(header):
             samples = struct.unpack_from('<I', header, at + 8)[0]
         at += 8 + length + (length & 1)
     return round(samples / rate, 2) if rate and samples and math.isfinite(samples / rate) else None
+
+
+def read_resource_catalog(stage):
+    """Read the bundled catalog or compile the same records from the workspace tables."""
+    packed = stage / 'resources.json'
+    if packed.is_file() and not (stage / '角色资源绑定.json').is_file():
+        return json.loads(packed.read_text(encoding='utf-8'))
+    roles = json.loads((stage / '角色资源绑定.json').read_text(encoding='utf-8'))['roles']
+    actions = [[] for _ in roles]
+    with (stage / '角色动作映射.csv').open(encoding='utf-8-sig', newline='') as handle:
+        for row in csv.DictReader(handle):
+            role, action = int(row['role']), int(row['action'])
+            move = {
+                'id': action, 'clip': int(row['clip']) if row['clip'] else None,
+                'category': int(row['category']), 'flags': row['state_flags'],
+                'va': row['record_va'], 'parameter': row['packed_low'],
+                'callbacks': [row[key] for key in ('enter_callback', 'update_callback', 'exit_callback')],
+            }
+            actions[role].append(move)
+    media_types = {'RIFF/WAVE': 'bgm', 'POM': 'pom', 'PNG': 'png'}
+    media = []
+    with (stage / 'YUM资源索引.csv').open(encoding='utf-8-sig', newline='') as handle:
+        for row in csv.DictReader(handle):
+            if row['kind'] in media_types:
+                media.append((int(row['id']), int(row['group_id']), int(row['slot']),
+                                           media_types[row['kind']]))
+    return {'roles':roles, 'actions':actions, 'media':media}

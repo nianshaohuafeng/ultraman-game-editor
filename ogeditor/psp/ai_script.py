@@ -1,4 +1,4 @@
-"""Decode the fighter AI programs in the v7 executable."""
+"""Decode fighter AI scripts, conditions and action choices from the PSP executable."""
 
 from dataclasses import dataclass
 import struct

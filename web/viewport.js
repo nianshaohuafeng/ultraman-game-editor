@@ -804,7 +804,7 @@ export class Viewport {
     if (actor.sceneVisible === false || actor.nativeVisible === false) return;
     const gl = this.gl;
     const wire = this.options.wire;
-    // The v7 rage callbacks advance one CLUT segment in 64 native frames.
+    // The rage callbacks advance one CLUT segment in 64 native frames.
     const phase = Math.floor(actor.localFrame * 64);
     const phaseIndex = (phase >> 12) & 3;
     const cosine = Math.trunc(Math.cos((phase & 4095) * Math.PI / 2048) * 4096);

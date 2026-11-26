@@ -6,7 +6,7 @@ import struct
 from formats import anm_header, u32
 
 
-# 08A1B6A0 replaces the pointer to slot 6 with slot 22 under the v7 rage flag.
+# 08A1B6A0 replaces the pointer to slot 6 with slot 22 when the rage flag is active.
 STORY_BANKS = {932, 967, 1007}
 STORY_CLIPS = {6: 0xD150, 22: 0x5BBD0}
 STRIDES = (8, 16, 16)

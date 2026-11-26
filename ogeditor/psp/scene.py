@@ -1,4 +1,4 @@
-"""PSP battle preview using v7 action bindings, scene commands and POM selectors."""
+"""Build PSP battle previews from action transitions, event scripts and texture bindings."""
 
 import base64
 import math

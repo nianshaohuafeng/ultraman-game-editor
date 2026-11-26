@@ -1,4 +1,4 @@
-"""使用本地 v7 镜像核对配招色表的目录、改色与另存读回。"""
+"""使用本地奥0镜像核对配招色表的目录、改色与另存读回。"""
 
 import sys
 import unittest
@@ -19,7 +19,7 @@ from project_file import parse_project, read_manifest, write_project
 BASE = workspace_root(APP) / 'KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso'
 
 
-@unittest.skipUnless(BASE.is_file(), '需要本地奥0 v7 镜像')
+@unittest.skipUnless(BASE.is_file(), '需要本地奥0测试镜像')
 class MovePaletteRoundtrip(unittest.TestCase):
     def test_separate_skills_with_same_donor(self):
         with TemporaryDirectory() as folder:

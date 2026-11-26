@@ -103,7 +103,7 @@ def clone_scene(eboot, image, effect, states, event, overlay, camera, node=None)
                 elif op == 0x13 and value == BLACK_AUX_CLIP:
                     struct.pack_into('<2I', data, at + 12, shape, clip)
         else:
-            # The v7 Mebius script ends with an explicit end opcode
+            # The Mebius scene script ends with an explicit end opcode
             # immediately before the effect table, with no -1 frame.
             if effect != 61 or data[-32:] != struct.pack('<f7I', 1510.0, 18, 0, 0, 0, 0, 0, 0):
                 raise ValueError('必杀演出脚本的终止记录与奥0不匹配。')

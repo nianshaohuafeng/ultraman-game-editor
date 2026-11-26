@@ -1,4 +1,4 @@
-"""Install difficulty-specific AI parameters over a stock or compiled v7 EBOOT."""
+"""Install difficulty-specific AI parameters over the original or edited PSP executable."""
 
 import base64
 from collections import defaultdict

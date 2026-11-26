@@ -1,15 +1,15 @@
-"""Resolve KGF v7 resources and apply pending edits over the source ISO."""
+"""Load PSP fighter resources and apply project edits to a new ISO."""
 
 import base64
 from collections import Counter, defaultdict, deque
 from copy import deepcopy
-import csv
 from dataclasses import replace
 from functools import cached_property, lru_cache
 from hashlib import sha256
 import json
 from pathlib import Path
 import struct
+from sys import intern
 
 from ogeditor.psp.appearance import MODEL_ROLES, color_timer, item_models, palette_modes
 from ogeditor.psp.animation_edit import (STORY_BANKS, change_timing, protect_story_clip, read_anm_bank, replace_anm_clips,
@@ -20,7 +20,7 @@ from formats import (SHAPE_TEMPLATE_OFFSETS, anm_header, base_damage, bom_parts,
                      event_records, read_shape, s16, u32)
 from ogeditor.input_notation import SEQUENCE, input_arrows
 from ogeditor.psp.move_textures import installed_locations, legacy_usage
-from ogeditor.psp.native_tables import (COMBO_UPDATES, COMMAND_NAMES, INITIAL_HP, LIFE_BANDS, Q12, THROWS, energy_layout, known_page_base,
+from ogeditor.psp.native_tables import (read_resource_catalog, COMBO_UPDATES, COMMAND_NAMES, INITIAL_HP, LIFE_BANDS, Q12, THROWS, energy_layout, known_page_base,
                            ZOFFY_RAGE_ENTRIES, action_name, check_eboot, command_catalog,
                            command_paths, music_catalog, native_layout, state_branches)
 
@@ -86,7 +86,7 @@ class Game:
             eboot = entries.get('/PSP_GAME/SYSDIR/EBOOT.BIN')
             self.entry = entries.get('/PSP_GAME/USRDIR/YUMFILE.BIN')
             if not eboot or not self.entry or eboot['size'] != baseline['eboot']['bytes']:
-                raise ValueError('请选择 受支持的奥0 ISO。')
+                raise ValueError('请选择受支持的奥0 ISO。')
             handle.seek(eboot['offset'])
             raw = handle.read(eboot['size'])
             try:
@@ -100,25 +100,21 @@ class Game:
         self.elf_layout = baseline['elf']
         self.eboot = eboot
         self.eboot_raw = raw
-        self.roles = json.loads((STAGE / '角色资源绑定.json').read_text(encoding='utf-8'))['roles']
+        catalog = read_resource_catalog(STAGE)
+        self.roles = catalog['roles']
         self.native_anm_members = {b['id'] for r in self.roles for case in r['cases']
                                    for b in (*case['anm_banks'], *case['encounter_anm'])}
         self.bank_tracks = lru_cache(maxsize=64)(lambda member: frozenset().union(
             *(clip_ids(clip) for clip in self.bank(member,b'ANM\0')[2] if clip)))
         self.actions = [{} for _ in self.roles]
         self.native_actions = [{} for _ in self.roles]
-        with (STAGE / '角色动作映射.csv').open(encoding='utf-8-sig', newline='') as handle:
-            for row in csv.DictReader(handle):
-                role, action = int(row['role']), int(row['action'])
-                move = {
-                    'id': action, 'clip': int(row['clip']) if row['clip'] else None,
-                    'category': int(row['category']), 'flags': row['state_flags'],
-                    'va': row['record_va'], 'parameter': row['packed_low'],
-                    'callbacks': [row[key] for key in ('enter_callback', 'update_callback', 'exit_callback')],
-                }
-                self.native_actions[role][action] = move
+        for role, moves in enumerate(catalog['actions']):
+            for move in moves:
+                self.native_actions[role][move['id']] = move
                 if move['clip'] is not None:
-                    self.actions[role][action] = move
+                    self.actions[role][move['id']] = move
+        self.media_members = [(member, group, slot, intern(kind)) for member, group, slot, kind in catalog['media']]
+        del catalog
         self.attribute_fields, self.clip_fields = native_layout(segments, BASE, self.actions)
         self.native_fields = {f.offset: f for f in (*self.attribute_fields.values(), *self.clip_fields.values())}
         self.energy_fields = energy_layout(segments, BASE, len(self.roles))
@@ -192,13 +188,6 @@ class Game:
                               self.pre_ai_eboot, self.entry_commands, self.input_paths) if installed else None
         self.bank_owners = {case['anm_banks'][0]['id']:role for role, fighter in enumerate(self.roles)
                             for case in fighter['cases']}
-        media_types = {'RIFF/WAVE': 'bgm', 'POM': 'pom', 'PNG': 'png'}
-        self.media_members = []
-        with (STAGE / 'YUM资源索引.csv').open(encoding='utf-8-sig', newline='') as handle:
-            for row in csv.DictReader(handle):
-                if row['kind'] in media_types:
-                    self.media_members.append((int(row['id']), int(row['group_id']), int(row['slot']),
-                                               media_types[row['kind']]))
         self.bank = lru_cache(maxsize=10)(self.read_bank)
         self.texture = lru_cache(maxsize=96)(self.read_texture)
         self.node_count = lru_cache(maxsize=None)(self.read_node_count)

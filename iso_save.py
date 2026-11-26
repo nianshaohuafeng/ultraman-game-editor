@@ -1,4 +1,4 @@
-"""Write a new ISO while keeping v7's group-relative story resources intact."""
+"""Save an edited PSP image while preserving group-relative story resource offsets."""
 
 from contextlib import contextmanager
 import hashlib

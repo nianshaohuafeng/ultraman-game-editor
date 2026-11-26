@@ -1,4 +1,4 @@
-"""Read-only ANM and BOM decoding for the KGF v7 preview."""
+"""Decode PSP ANM tracks and BOM frame events for the timeline and model preview."""
 
 from dataclasses import dataclass
 import math
@@ -119,7 +119,7 @@ SHAPE_TEMPLATE_OFFSETS = {0x00: 0x16, 0x01: 0x08, 0x02: 0x08, 0x05: 0x20, 0x0A: 
 # 08887414/08887674 populate the normal hit cache. 08887810/08887898
 # populate the skill caches, including the word read by the throw HP routines.
 DAMAGE_OFFSETS = {0: (8, 24), 5: (8, 34), 6: (4, 18), 7: (4, 18)}
-# 08887414 / 08887674 write these shared fields. The readers are traced in the v7 EBOOT report.
+# 08887414 / 08887674 write these shared fields. The battle hit handlers consume these cache fields.
 ATTACK_FIELDS = {
     0x0A: ('连击回气值', '命中后累加到攻击方。连击结束时结算，倍率为 1 + 向下取整（连击数 ÷ 4），受气槽上限约束。'),
     0x0C: ('受击／防御反应号', '索引姿态和方向对应的受击状态表，以及站防与蹲防状态表。原生表索引为 0 至 24。'),

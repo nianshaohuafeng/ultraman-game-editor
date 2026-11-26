@@ -13,14 +13,14 @@ from viewer import open_game
 from ogeditor.ps2.formats import Bom
 
 ROOT = workspace_root(APP)
-V7 = ROOT/'KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso'
+PSP_ISO = ROOT/'KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso'
 FE3 = ROOT/'01_游戏镜像/格斗进化3/奥特曼格斗进化3.iso'
 
 
-@unittest.skipUnless(V7.exists(), '需要奥0 v7 镜像')
+@unittest.skipUnless(PSP_ISO.exists(), '需要奥0测试镜像')
 class SkillPhases(unittest.TestCase):
     def test_native_phase_lists_and_timelines(self):
-        game = Game(V7)
+        game = Game(PSP_ISO)
         for role, root, clips in [(1,160,[201,202]),(0,158,[197,198]),(8,158,[157,158])]:
             case,_,bom,_ = game.form_binding(role,0,0)
             rows = game.move_catalog(role,case,bom)
@@ -33,7 +33,7 @@ class SkillPhases(unittest.TestCase):
                 self.assertEqual(sum(e.get('factory') in (22,23) for e in preview['events']),19)
 
     def test_transferred_second_phase_damage_survives_project_and_iso(self):
-        g=Game(V7)
+        g=Game(PSP_ISO)
         g.edit_move_set(0,158,1,160)
         def event(game):
             return next(e for e in game.motion(0,0,0,159)['events'] if e['op']==7 and e['frame']==25)
@@ -57,7 +57,7 @@ class SkillPhases(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             project=Path(directory)/'phases.kgfp'
             write_project(g,project,{})
-            h=Game(V7)
+            h=Game(PSP_ISO)
             parse_project(h,project,read_manifest(project))
             check(h)
             output=Path(directory)/'phases.iso'

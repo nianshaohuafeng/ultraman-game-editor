@@ -1,4 +1,4 @@
-"""Default, animation-complete transitions in the v7 PSP battle state machine."""
+"""Follow the default PSP battle-state transitions when an animation completes."""
 import struct
 from move_eboot import BASE
 

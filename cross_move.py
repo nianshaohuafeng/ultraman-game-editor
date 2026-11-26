@@ -1,4 +1,4 @@
-"""Convert native fighter animation and contact data between FE3 and KGF v7."""
+"""Retarget fighter animations and contact events between the PSP and PS2 games."""
 
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, replace

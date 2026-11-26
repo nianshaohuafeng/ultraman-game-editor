@@ -1,4 +1,4 @@
-"""Material and item bindings for the v7 fighter model loader."""
+"""Resolve model parts, materials and palette bindings for PSP fighters."""
 
 from formats import s16, u32
 

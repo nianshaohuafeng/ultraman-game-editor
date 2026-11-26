@@ -13,7 +13,7 @@ from project_file import parse_project, read_manifest, write_project
 SOURCE = workspace_root(APP) / "KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso"
 
 
-@unittest.skipUnless(SOURCE.is_file(), "需要奥0 v7 镜像")
+@unittest.skipUnless(SOURCE.is_file(), "需要奥0测试镜像")
 class GroundTravelTests(unittest.TestCase):
     def test_move_set_and_old_project_keep_separate_fields(self):
         game = Game(SOURCE)

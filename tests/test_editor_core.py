@@ -96,7 +96,7 @@ class WorkspaceTests(unittest.TestCase):
         subprocess.run([sys.executable, '-I', '-c', code, str(APP)], check=True, timeout=20)
 
     @unittest.skipUnless((workspace_root(APP)/'KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso').is_file(),
-                         '需要本地奥0 v7 镜像')
+                         '需要本地奥0测试镜像')
     def test_animation_track_cache_follows_whole_bank_history(self):
         game = viewer.open_game(workspace_root(APP)/'KGF原创剧情优化_20261105/KGF原创剧情修复版 v7.iso')
         member = game.roles[0]['cases'][0]['anm_banks'][0]['id']
