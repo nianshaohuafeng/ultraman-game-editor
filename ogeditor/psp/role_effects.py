@@ -106,7 +106,7 @@ def clone_scene(eboot, image, effect, states, event, overlay, camera, node=None)
             # The v7 Mebius script ends with an explicit end opcode
             # immediately before the effect table, with no -1 frame.
             if effect != 61 or data[-32:] != struct.pack('<f7I', 1510.0, 18, 0, 0, 0, 0, 0, 0):
-                raise ValueError('必杀演出脚本的终止记录与 v7 不匹配。')
+                raise ValueError('必杀演出脚本的终止记录与奥0不匹配。')
             data.extend(struct.pack('<f7I', -1.0, 0, 0, 0, 0, 0, 0, 0))
         pointers.append((hi, lo, eboot.allocate(data, 16)))
     return eboot.clone(start, end, pointers=pointers)
@@ -140,7 +140,7 @@ def install_animation_aliases(eboot, aliases):
     _, _, offset = eboot.locate(SELECT_ANIMATION)
     first, second = struct.unpack_from('<2I', eboot.raw, offset)
     if any(eboot.relocs.get(SELECT_ANIMATION + delta) for delta in (0, 4)):
-        raise ValueError('ANM 选择入口与 v7 的重定位不匹配。')
+        raise ValueError('ANM 选择入口与奥0的重定位不匹配。')
     # Negative requests use the active action row. For explicit requests the
     # actual fighter and active state disambiguate the donor's clip number.
     code = eboot.code([

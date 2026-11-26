@@ -14,7 +14,7 @@ workshop = Path('02_修改工具/猪猪修改工坊')
 enc = Path('02_修改工具/PSP统一工具/Source/ENC')
 
 # Keep the source layout for the shared readers and the v7 reference data.
-data = [(str(app / 'web'), 'web'), (str(app / 'KGF-v7.ico'), '.'), (str(editor_data(app, workspace, 'select_page_bases.dat')), '.')]
+data = [(str(app / 'web'), 'web'), (str(app / 'ogeditor.ico'), '.'), (str(editor_data(app, workspace, 'select_page_bases.dat')), '.')]
 data.append((str(editor_data(app, workspace, 'move_bank_layouts.dat')), '.'))
 fbx_reader = distribution('assimp-py')
 data.extend((str(fbx_reader.locate_file(path)), str(path.parent))
@@ -42,7 +42,7 @@ exe = EXE(
     a.datas,
     [],
     name='奥格资源编辑器融合版本',
-    icon=str(app / 'KGF-v7.ico'),
+    icon=str(app / 'ogeditor.ico'),
     console=False,
     upx=False,
 )

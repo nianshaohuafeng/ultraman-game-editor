@@ -34,7 +34,7 @@ def install_rates(raw, layout, canonical, roles, rates):
     image = Eboot(raw, compiled_layout(raw, layout), limit)
     site = image.locate(TICK_CALL)[2]
     if raw[site:site+8] != canonical[site:site+8]:
-        raise ValueError('移动动作更新入口与当前 v7 基底不一致。')
+        raise ValueError('移动动作更新入口与当前奥0基底不一致。')
     table = image.allocate(b''.join(RATE.encode(rates.get((r, b), 1.0))
                                    for r in range(roles) for b in range(LIFE_BANDS)))
     # a0 = fighter, f12 = simulation step. The original delay slot supplies a0.

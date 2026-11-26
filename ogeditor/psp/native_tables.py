@@ -168,7 +168,7 @@ def check_eboot(raw, digest, canonical, fields):
     if hashlib.sha256(raw).hexdigest() == digest:
         return
     if len(raw) != len(canonical) or hashlib.sha256(canonical).hexdigest() != digest:
-        raise ValueError('无法核对 v7 的 EBOOT 数据表。')
+        raise ValueError('无法核对奥0的 EBOOT 数据表。')
     restored = bytearray(raw)
     for field in fields:
         if field.read(raw) != field.read(canonical):
@@ -176,7 +176,7 @@ def check_eboot(raw, digest, canonical, fields):
             start = field.offset
             restored[start:start + field.size] = canonical[start:start + field.size]
     if hashlib.sha256(restored).hexdigest() != digest:
-        raise ValueError('此镜像的 EBOOT 与 KGF v7 工具支持的版本不匹配。')
+        raise ValueError('此镜像的 EBOOT 与奥0受支持的版本不匹配。')
 
 
 def command_catalog(data):

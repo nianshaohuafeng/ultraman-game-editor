@@ -86,15 +86,15 @@ class Game:
             eboot = entries.get('/PSP_GAME/SYSDIR/EBOOT.BIN')
             self.entry = entries.get('/PSP_GAME/USRDIR/YUMFILE.BIN')
             if not eboot or not self.entry or eboot['size'] != baseline['eboot']['bytes']:
-                raise ValueError('请选择 KGF原创剧情修复版 v7 的 ISO。')
+                raise ValueError('请选择 受支持的奥0 ISO。')
             handle.seek(eboot['offset'])
             raw = handle.read(eboot['size'])
             try:
                 self.yum = read_yum(handle, self.entry)
             except (AssertionError, struct.error):
-                raise ValueError('无法读取此镜像的 v7 YUM 目录。') from None
+                raise ValueError('无法读取此镜像的奥0 YUM 目录。') from None
         if (len(self.yum['groups']), len(self.yum['files'])) != (739, 7070):
-            raise ValueError('此镜像的 YUM 索引与 v7 绑定表不匹配。')
+            raise ValueError('此镜像的 YUM 索引与奥0绑定表不匹配。')
         self.ensure_open()
         segments = baseline['elf']['segments']
         self.elf_layout = baseline['elf']

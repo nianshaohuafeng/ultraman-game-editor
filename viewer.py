@@ -411,7 +411,7 @@ class ViewerApi:
     def _fe3_call(self, serial, method, *args):
         def operation(game):
             if not isinstance(game, FE3Game):
-                raise ValueError('请先打开格斗进化3 ISO。')
+                raise ValueError('请先打开奥3 ISO。')
             return method(game, *args)
 
         return self._call(serial, operation)
@@ -434,7 +434,7 @@ class ViewerApi:
     def fe3_listen(self, serial, track):
         def play(game, cancel):
             if not isinstance(game, FE3Game):
-                raise ValueError('请先打开格斗进化3 ISO。')
+                raise ValueError('请先打开奥3 ISO。')
             return fe3_audio(game, track, cancel=cancel)
         return self._listen(serial, play)
 
@@ -470,7 +470,7 @@ class ViewerApi:
         def run(game, index):
             import webview
             chosen = self._window.create_file_dialog(webview.FileDialog.SAVE, directory=str(game.path.parent),
-                save_filename=f'FE3_BGM_{index:03d}.wav', file_types=('WAV 音频 (*.wav)',))
+                save_filename=f'奥3_BGM_{index:03d}.wav', file_types=('WAV 音频 (*.wav)',))
             if not chosen:
                 return None
             result = write_asset(chosen[0], '.wav', fe3_audio(game, index, True))
@@ -582,7 +582,7 @@ class ViewerApi:
             records = game.workbench.throw_view(role, shape, opponent)
             names = self._window.create_file_dialog(
                 webview.FileDialog.SAVE, directory=str(self._asset_directory or game.path.parent),
-                save_filename=f'FE3_抓取分析_{role:02d}_{opponent:02d}.json', file_types=('JSON (*.json)',))
+                save_filename=f'奥3_抓取分析_{role:02d}_{opponent:02d}.json', file_types=('JSON (*.json)',))
             if not names:
                 return None
             result = write_asset(names[0], '.json', json.dumps(
@@ -628,7 +628,7 @@ class ViewerApi:
             if mode == 'export':
                 data = game.clip_export(resource, member, clip)
                 names = self._window.create_file_dialog(
-                    webview.FileDialog.SAVE, directory=directory, save_filename=f'FE3_{resource:04X}_{clip:03d}.anm',
+                    webview.FileDialog.SAVE, directory=directory, save_filename=f'奥3_{resource:04X}_{clip:03d}.anm',
                     file_types=filters)
                 if not names:
                     return None
@@ -663,7 +663,7 @@ class ViewerApi:
             self._asset_directory = Path(names[0]).parent
             return game.replace_asset(resource, member, names[0], palette, palette_only)
         extension, data = game.asset_export(resource, member, mode, palette)
-        stem = f'FE3_{resource:04X}' + (f'_{member:03d}' if member >= 0 else '')
+        stem = f'奥3_{resource:04X}' + (f'_{member:03d}' if member >= 0 else '')
         if mode == 'png':
             stem += f'_CLUT{palette}'
         names = self._window.create_file_dialog(webview.FileDialog.SAVE, directory=directory,
@@ -687,7 +687,7 @@ class ViewerApi:
         import webview
 
         chosen = self._window.create_file_dialog(webview.FileDialog.SAVE, directory=str(game.path.parent),
-                                                save_filename=f'KGF_BGM_YUM{member}.wav',
+                                                save_filename=f'奥0_BGM_YUM{member}.wav',
                                                 file_types=('WAV 音频 (*.wav)',))
         return write_asset(chosen[0], '.wav', game.music_audio(member, True)) if chosen else None
 
@@ -738,7 +738,7 @@ class ViewerApi:
             raise ValueError('请选择有效的导出格式。')
         extension = '.' + mode if mode != 'native' else {
             'bgm': '.bin' if shared.ps2 else '.at3', 'pom': '.pom', 'png': '.png'}[kind]
-        source = f'FE3_{key[0]:04X}' + (f'_{key[1]}' if key[1] >= 0 else '') if shared.ps2 else f'KGF_YUM_{key[0]}'
+        source = f'奥3_{key[0]:04X}' + (f'_{key[1]}' if key[1] >= 0 else '') if shared.ps2 else f'奥0_YUM_{key[0]}'
         chosen = self._window.create_file_dialog(webview.FileDialog.SAVE, directory=directory,
             save_filename=source + extension, file_types=(f'{extension[1:].upper()} 文件 (*{extension})',))
         if not chosen:
@@ -885,7 +885,7 @@ def main():
     api._window = webview.create_window('奥格资源编辑器融合版本', str(HERE / 'web/index.html'), js_api=api,
                                         width=1510, height=930, min_size=(1000, 680),
                                         background_color='#101b2c', text_select=True)
-    icon = HERE / 'KGF-v7.ico'
+    icon = HERE / 'ogeditor.ico'
     webview.start(gui='edgechromium', http_server=True, icon=str(icon) if icon.is_file() else None)
 
 

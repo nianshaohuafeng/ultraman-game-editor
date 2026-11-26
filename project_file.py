@@ -95,13 +95,13 @@ def read_manifest(path):
         if isinstance(result, dict) and result.get('format') == 2 and result.get('game') == 'fe3':
             if all(key in result for key in ('source', 'source_sha256', 'view', 'assets', 'native')):
                 return result
-            raise ValueError('格斗进化3 工程记录不完整。')
+            raise ValueError('奥3工程记录不完整。')
         keys = ('source_sha256', 'source', 'view', 'assets', 'events', 'native', 'templates', 'notes', 'aliases')
         if not isinstance(result, dict) or result.get('format') != 1 or any(key not in result for key in keys):
             raise ValueError('工程版本不受支持。')
         return result
     except (BadZipFile, KeyError, UnicodeDecodeError):
-        raise ValueError('无法读取此 KGF 工程。') from None
+        raise ValueError('无法读取该工程。') from None
 
 
 def parse_project(game, path, manifest):
@@ -307,7 +307,7 @@ def write_fe3_project(game, path, view, portable, replace_existing):
                 archive.writestr(name, state['assets'][resource, member])
         with ZipFile(temp) as archive:
             if archive.testzip() is not None:
-                raise ValueError('格斗进化3 工程读回校验失败。')
+                raise ValueError('奥3工程读回校验失败。')
         game.ensure_open()
     game.saved = state
     return {'name':path.name, 'path':str(path), 'edits':game.edit_status()}
@@ -402,7 +402,7 @@ def parse_fe3_project(game, path, manifest):
                 raise ValueError('工程跳跃参数无效或重复。')
             jump[role] = result
     except (BadZipFile, KeyError, TypeError, IndexError, struct.error) as exc:
-        raise ValueError('格斗进化3 工程数据不完整。') from exc
+        raise ValueError('奥3工程数据不完整。') from exc
     game.asset_edits, game.native_edits, game.skill_edits = assets, native, skills
     game.rating_edits = ratings
     game.validate_transfer_capacity(game.transfer_plan)

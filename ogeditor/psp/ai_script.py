@@ -79,7 +79,7 @@ def getter_tables(image, address):
         if len(tables) == 7:
             break
     if set(tables) != set(range(0, 28, 4)):
-        raise ValueError('本镜像的 AI 脚本入口不符合 v7 布局。')
+        raise ValueError('本镜像的 AI 脚本入口不符合奥0布局。')
     return tuple(tables[slot] for slot in range(0, 28, 4))
 
 
@@ -211,7 +211,7 @@ class FighterAI:
         for table in self.tables:
             repeat = struct.unpack_from('<9I', image, table - BASE)
             if repeat != (repeat[0],) * 8 + (0,) or not self.start < repeat[0] < table:
-                raise ValueError('v7 AI 策略表的共享指针布局已变化。')
+                raise ValueError('奥0 AI 策略表的共享指针布局已变化。')
             starts.append(repeat[0])
         self.programs = [program(image, start, end) for start, end in
                          zip([self.start, *starts], [starts[0], *self.tables])]

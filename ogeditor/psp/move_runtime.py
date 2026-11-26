@@ -57,7 +57,7 @@ def route_camera_request(eboot, entry, table, last_index):
     _, _, offset = eboot.locate(entry)
     first, second = struct.unpack_from('<2I', eboot.raw, offset)
     if any(eboot.relocs.get(entry + x) for x in (0, 4)):
-        raise ValueError('镜头入口与 v7 的重定位不匹配。')
+        raise ValueError('镜头入口与奥0的重定位不匹配。')
     # a2 names the source's first key. The native entry still computes
     # the player side and variant.
     helper = eboot.code([

@@ -135,7 +135,7 @@ def install_ai(raw, layout, canonical, scripts, edits):
         groups[role, difficulty][site] = value
     stride = 8 + max(scripts[role].end - scripts[role].start for role, _ in groups)
     if stride > SCRIPT_SIZE_LIMIT:
-        raise ValueError('AI 脚本块超出 v7 的复制缓冲区。')
+        raise ValueError('AI 脚本块超出奥0的复制缓冲区。')
     profiles = eboot.allocate(bytes(4 * FIGHTERS * LEVELS))
     for (role, difficulty), values in sorted(groups.items()):
         script = scripts[role]
@@ -158,7 +158,7 @@ def install_ai(raw, layout, canonical, scripts, edits):
     eboot.redirect(practice + 4, hook + 4)
     for call in INIT_CALLS:
         if u32(raw, eboot.locate(call)[2]) >> 26 != 3:
-            raise ValueError('AI 初始化入口与 v7 不一致。')
+            raise ValueError('AI 初始化入口与支持的奥0布局不一致。')
         eboot.redirect(call, practice if call == REINIT_CALL else hook, call=True)
 
     rows = [[*key, value] for key, value in sorted(edits.items())]

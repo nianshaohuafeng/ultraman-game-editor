@@ -135,7 +135,7 @@ def native_offset(elf, va, length=1):
         kind, offset, address, _, size, _, _, _ = struct.unpack_from('<8I', elf, table + i * entry_size)
         if kind == 1 and address <= va and va + length <= address + size:
             return offset + va - address
-    raise ValueError(f'地址 0x{va:08X} 超出格斗进化3 ELF 文件段。')
+    raise ValueError(f'地址 0x{va:08X} 超出奥3 ELF 文件段。')
 
 
 @dataclass(frozen=True)
@@ -215,7 +215,7 @@ class NativeTables:
         return self.pointer(table, index) & 15
 
     def descriptor(self, role):
-        require(type(role) is int and 0 <= role < ROLE_COUNT, '请选择格斗进化3角色。')
+        require(type(role) is int and 0 <= role < ROLE_COUNT, '请选择奥3角色。')
         desc = self.words(self.pointer(0x3E38C0, role), 21)
         return desc, self.words(desc[20], 14)
 

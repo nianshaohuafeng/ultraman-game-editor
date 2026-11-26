@@ -381,12 +381,12 @@ def install_sound(raw, layout, canonical, codes, members=None):
         original = u32(raw,pos)
         relocs = builder.relocs[site]
         if original >> 16 != signature or len(relocs)!=1 or relocs[0][1] & 15 != kind:
-            raise ValueError('v7 声音索引的原生装载指令已变化。')
+            raise ValueError('奥0声音索引的原生装载指令已变化。')
         where,info = relocs[0]
         builder.write_raw(where+4,struct.pack('<I',(info & 0xff00ffff) | segment<<16))
         builder.word(site,original & 0xffff0000 | (operand & 65535))
     if struct.unpack_from('<2I',raw,builder.locate(CLASSIFY)[2]) != (0x3C06000F,0x34C40106):
-        raise ValueError('v7 的声音分派入口已变化。')
+        raise ValueError('奥0的声音分派入口已变化。')
     # Private voices use the actor's own interruptible handle; stock and one-shot effects use the native switch.
     hook = builder.code([branch(1,S0,1,5),iword(15,Z,A2,15),sll(S0,S0,1),rword(Z,S0,S0,2,1),
                          0,lw(A1,0xF0,S1),0,iword(13,A2,A0,0x106)])

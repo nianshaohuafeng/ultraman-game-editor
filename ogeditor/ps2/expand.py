@@ -214,7 +214,7 @@ def write_expanded_iso(source, destination, files, container, grown, writes):
     with source.open('rb') as inp, destination.open('w+b') as out:
         records = {item['path'].lstrip('/').upper():item['record'] for item in iso_directory(inp)}
         require(len(records) == len(files) and all(p < boundary for p in records.values()),
-                'ISO 目录布局与格斗进化3 扩展写入不匹配。')
+                'ISO 目录布局与奥3扩展写入不匹配。')
         inp.seek(0)
         remaining = boundary
         while remaining:

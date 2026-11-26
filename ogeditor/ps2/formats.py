@@ -197,7 +197,7 @@ def align(value, quantum):
 def pom_layout(data):
     layout = get_pom_layout(data)
     require(layout['rule'] == POM_RULE_FE3_LEGACY and layout['total_size'] <= len(data),
-            '需要完整的格斗进化3 PS2 POM。')
+            '需要完整的奥3 PS2 POM。')
     return layout
 
 

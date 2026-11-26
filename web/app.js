@@ -1380,10 +1380,10 @@ async function start() {
     const result = await api('initialize');
     restoreDisplay(result.display);
     if (result.document) await useISO(result.document);
-    else viewMessage('打开 KGF v7 ISO 或工程后开始预览');
+    else viewMessage('打开奥0、奥3的 ISO 或工程后开始预览');
     if (result.error) message(result.error, true);
   } catch (error) {
-    viewMessage('请选择 v7 ISO');
+    viewMessage('请选择奥0或奥3的 ISO');
     message(error.message, true);
   } finally {
     state.writing = false;

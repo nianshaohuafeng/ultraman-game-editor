@@ -38,7 +38,7 @@ class Transfers:
 def audio_table(tables):
     upper, = tables.at(0x225D5C,'<I')
     lower, = tables.at(0x225D64,'<I')
-    require(upper >> 16 == 0x3C0F and lower >> 16 == 0x25EF, '格斗进化3 的必杀音库指针无效。')
+    require(upper >> 16 == 0x3C0F and lower >> 16 == 0x25EF, '奥3的必杀音库指针无效。')
     return (upper & 65535)*65536 + (lower & 32767) - (lower & 32768)
 
 
@@ -48,7 +48,7 @@ def audio_slots(tables):
     address = audio_table(tables)
     count = SKILL_AUDIO_COUNT + 1 if address == SKILL_AUDIO_TABLE else (0x200000 - address) // 4
     rows = tables.at(address, f'<{count}i')
-    require(9999 in rows, '格斗进化3 的必杀音库表无效。')
+    require(9999 in rows, '奥3的必杀音库表无效。')
     rows = rows[:rows.index(9999)+1]
     slots, markers = {}, {}
     for role in range(39):

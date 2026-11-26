@@ -114,7 +114,7 @@ class Eboot:
                 info is self.last and 0 <= relative - info['memsz'] < len(self.payload)
             ):
                 return index, relative, info['offset'] + relative
-        raise ValueError(f'EBOOT 地址 0x{va:08X} 超出 v7 载入段。')
+        raise ValueError(f'EBOOT 地址 0x{va:08X} 超出奥0载入段。')
 
     def write_raw(self, offset, data):
         current = self.out[offset:offset + len(data)]
@@ -176,7 +176,7 @@ class Eboot:
         for address, kind in ((va, HI), (va + 4, LO)):
             records = self.relocs.get(address, [])
             if len(records) != 1 or records[0][1] & 15 != kind:
-                raise ValueError('EBOOT 贴附点地址的重定位与 v7 不匹配。')
+                raise ValueError('EBOOT 贴附点地址的重定位与支持的奥0布局不匹配。')
             position, info = self.relocs.pop(address)[0]
             self.write_raw(position + 4, struct.pack('<I', info & ~15))
         self.redirect(va, target)
@@ -205,7 +205,7 @@ class Eboot:
         for site, node in node_loads:
             original = u32(self.raw, offset + site - start)
             if original >> 26 != 35 or original & 0xFFFF or self.relocs.get(site):
-                raise ValueError('技能根节点的读取指令与 v7 不一致。')
+                raise ValueError('技能根节点的读取指令与支持的奥0布局不一致。')
             narrow[site] = addiu(original >> 16 & 31, Z, node)
         for site, mapped_node in node_words:
             original = u32(self.raw, offset + site - start)
@@ -214,7 +214,7 @@ class Eboot:
             field = (original & 0xFFFF) % 544
             value = mapped_node * 544 + field
             if (original >> 26 != 9 and not forward_offset) or value < 0 or self.relocs.get(site):
-                raise ValueError('技能的发射骨骼与 v7 寄存器布局不匹配。')
+                raise ValueError('技能的发射骨骼与奥0寄存器布局不匹配。')
             if value <= (0xFFFF if forward_offset else 0x7FFF):
                 narrow[site] = original & 0xFFFF0000 | value
                 continue
@@ -390,7 +390,7 @@ class Eboot:
                     meta = extended
         trailer = marker + struct.pack('<I', len(meta)) + meta
         if reloc_at + len(reloc) + len(trailer) + 4 > self.limit:
-            raise ValueError('修改超出了 v7 EBOOT 预留的代码空间。')
+            raise ValueError('修改超出了奥0 EBOOT 预留的代码空间。')
         self.out[self.end:reloc_at] = self.payload.ljust(payload_size, b'\0')
         self.out[reloc_at:reloc_at + len(reloc)] = reloc
         trailer_at = self.limit - 4 - len(trailer)

@@ -26,7 +26,7 @@ def stream_samples(data, size=None):
             and 0 < frames and frames % 2 == 0 and tail == count * frames_per_block - frames
             and tail < 2 * frames_per_block and logical == HEADER + frames * 16
             and size == HEADER + count * block and not any(data[24:HEADER]),
-            '请选择格斗进化3原生双声道流式音轨（BIN）。')
+            '请选择奥3原生双声道流式音轨（BIN）。')
     return frames // 2 * 28
 
 

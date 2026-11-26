@@ -124,10 +124,10 @@ class FE3Game:
         self.stamp = self.file_stamp()
         self.files = {f.path.upper(): f for f in (files if files is not None else list_iso_files(self.path))}
         require(BOOT in self.files and all(f'FILE{i}.BIN' in self.files for i in range(1, 5)),
-                '需要带有 SLPS_254.41 的格斗进化3 ISO。')
+                '需要带有 SLPS_254.41 的奥3 ISO。')
         self.boot = self.files[BOOT]
         self.elf = read_iso_file(self.path, self.boot)
-        require(self.elf[:7] == b'\x7fELF\x01\x01\x01', '格斗进化3 主 ELF 格式无效。')
+        require(self.elf[:7] == b'\x7fELF\x01\x01\x01', '奥3主 ELF 格式无效。')
         self.table = native_offset(self.elf, TABLE, 16 * TOTAL)
         self.hp_at = native_offset(self.elf, HP_TABLE, 18 * len(ROSTER))
         self.form_defense_at = native_offset(self.elf, FORM_DEFENSE, 6 * len(ROSTER))
@@ -226,7 +226,7 @@ class FE3Game:
                 offset, span, size, container = struct.unpack_from('<4I', self.elf, self.table + 16 * resource)
                 pack = selected(packs, container)
                 require(0 < size <= span and not offset % SECTOR and not span % SECTOR and offset + span <= pack.size
-                        and pack.offset + offset + span <= self.stamp[0], '格斗进化3资源表越过容器边界。')
+                        and pack.offset + offset + span <= self.stamp[0], '奥3资源表越过容器边界。')
                 at = pack.offset + offset
                 main = resource_part(source, resource, -1, at, size, span, f'{resource:04X}',
                                      word(self.elf, lengths + 4 * resource))
