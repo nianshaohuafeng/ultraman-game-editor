@@ -1,4 +1,4 @@
-"""In-place fields read by DispatchBomFrameEvents and the per-opcode handlers."""
+"""按事件类型读写触发帧、伤害、音效和手型，并检查可填写的数值范围。"""
 
 from dataclasses import dataclass
 import struct

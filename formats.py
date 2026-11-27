@@ -1,4 +1,4 @@
-"""Decode PSP ANM tracks and BOM frame events for the timeline and model preview."""
+"""解码奥0的 ANM 骨骼动画和 BOM 帧事件，供模型预览和时间轴使用。"""
 
 from dataclasses import dataclass
 import math
