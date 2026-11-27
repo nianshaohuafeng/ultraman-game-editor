@@ -1,4 +1,4 @@
-"""Emit PSP executable patches and relocations for transferred moves."""
+"""为奥0配招生成 EBOOT 补丁，并从改过的镜像中识别已安装的配招。"""
 
 from collections import defaultdict
 from copy import deepcopy

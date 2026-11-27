@@ -1,4 +1,4 @@
-"""Resolve and transfer fighter sounds and install the PSP sound lookup extension."""
+"""读取角色音库，随招式移植音效和战吼，也可用 WAV 替换语音。"""
 
 import base64
 import struct
