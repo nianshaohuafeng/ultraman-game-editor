@@ -1,2 +1,3 @@
 -r requirements.txt
+# 将程序、界面和本地读取模块打进同一个 EXE。
 PyInstaller==6.14.2
