@@ -1,4 +1,4 @@
-"""Launch the desktop editor and connect its preview and editing commands to the window."""
+"""打开修改器窗口，把角色预览、配招和工程读写接到界面按钮上。"""
 
 import argparse
 import base64
@@ -10,6 +10,7 @@ import subprocess
 from threading import Event, RLock
 from zlib import error as PngError
 
+from ogeditor import APP_NAME
 from ogeditor.psp.game import Game, HERE
 from ogeditor.psp.asset_transfer import write_asset
 from iso_save import new_output
@@ -38,12 +39,16 @@ class ViewerApi:
         self._initial_path = initial_path
         self._session_path = session_path or (
             Path(os.environ.get('LOCALAPPDATA') or Path.home() / 'AppData/Local')
-            / '奥格资源编辑器融合版本/session.json'
+            / APP_NAME / 'session.json'
         )
         try:
             preference = self._session_path
             if session_path is None and not preference.exists():
-                preference = preference.parent.parent / 'KGF v7 修改器/session.json'
+                for old_name in ('奥格资源编辑器融合版本', 'KGF v7 修改器'):
+                    previous = preference.parent.parent / old_name / 'session.json'
+                    if previous.is_file():
+                        preference = previous
+                        break
             session = json.loads(preference.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             session = {}
@@ -879,10 +884,10 @@ class ViewerApi:
 def main():
     import webview
 
-    parser = argparse.ArgumentParser(description='奥格资源编辑器融合版本')
+    parser = argparse.ArgumentParser(description=APP_NAME)
     parser.add_argument('iso', nargs='?', type=Path)
     api = ViewerApi(parser.parse_args().iso)
-    api._window = webview.create_window('奥格资源编辑器融合版本', str(HERE / 'web/index.html'), js_api=api,
+    api._window = webview.create_window(APP_NAME, str(HERE / 'web/index.html'), js_api=api,
                                         width=1510, height=930, min_size=(1000, 680),
                                         background_color='#101b2c', text_select=True)
     icon = HERE / 'ogeditor.ico'

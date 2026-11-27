@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+import os
 import random
 import struct
 import subprocess
@@ -84,6 +85,21 @@ class DfsTests(unittest.TestCase):
 
 
 class WorkspaceTests(unittest.TestCase):
+    def test_renamed_editor_recovers_last_display_settings(self):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, LOCALAPPDATA=directory):
+            root = Path(directory)
+            for name, frame in [('KGF v7 修改器', 12), ('奥格资源编辑器融合版本', 37)]:
+                path = root / name / 'session.json'
+                path.parent.mkdir()
+                path.write_text('{"display":{"frame":%d}}' % frame, encoding='utf-8')
+                api = viewer.ViewerApi()
+                self.assertEqual(api.initialize()['value']['display'], {'frame': frame})
+            self.assertEqual(viewer.ViewerApi(session_path=root/'custom.json').initialize()['value']['display'], {})
+            self.assertTrue(api.remember_session(None, 1, None, {'frame': 62})['value'])
+            self.assertTrue((root / '奥特曼游戏修改器' / 'session.json').is_file())
+            self.assertEqual(viewer.ViewerApi().initialize()['value']['display'], {'frame': 62})
+            self.assertEqual(viewer.ViewerApi(session_path=path).initialize()['value']['display'], {'frame': 37})
+
     def test_native_readers_load_without_a_window_or_document(self):
         code = (
             "import sys; sys.path.insert(0, sys.argv[1]); "

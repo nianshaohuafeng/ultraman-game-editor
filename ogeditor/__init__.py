@@ -1,1 +1,3 @@
-"""Shared components for the Ultra Fighting Evolution resource editor."""
+"""奥特曼游戏修改器的共用模块。"""
+
+APP_NAME = "奥特曼游戏修改器"

@@ -6,6 +6,7 @@ import sys
 
 app = Path(SPECPATH).resolve()
 sys.path.insert(0, str(app))
+from ogeditor import APP_NAME
 from ogeditor.paths import PSP_REFERENCE, editor_data, psp_reference, workspace_root
 from ogeditor.psp.native_tables import read_resource_catalog
 
@@ -54,7 +55,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='奥格资源编辑器融合版本',
+    name=APP_NAME,
     icon=str(app / 'ogeditor.ico'),
     console=False,
     upx=False,
