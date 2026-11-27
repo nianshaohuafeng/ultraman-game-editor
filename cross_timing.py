@@ -1,4 +1,4 @@
-"""Preserve exact timing of retained BOM events across repeated frame-range conversions."""
+"""记录帧事件在原动作中的位置，多次调整动作时长也能按原帧换算。"""
 from collections import defaultdict, deque
 import json
 import struct

@@ -1,4 +1,4 @@
-"""Retarget fighter animations and contact events between the PSP and PS2 games."""
+"""在奥0和奥3之间移植动作，按目标骨架重新对齐姿势、手型和命中位置。"""
 
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, replace
