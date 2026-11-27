@@ -1,4 +1,4 @@
-"""Keep the editor's saved settings and native asset changes in a project file."""
+"""保存角色改动和替换的资源，重开工程时用 SHA-256 核对来源镜像。"""
 
 import hashlib
 import json

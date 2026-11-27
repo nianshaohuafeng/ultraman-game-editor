@@ -1,4 +1,4 @@
-"""Save an edited PSP image while preserving group-relative story resource offsets."""
+"""把角色和资源改动写入新的奥0镜像，重排数据时保留剧情资源的组内偏移。"""
 
 from contextlib import contextmanager
 import hashlib
