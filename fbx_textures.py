@@ -1,4 +1,4 @@
-"""Bind the FBX's diffuse PNGs to a native PSP texture and preserve the model's UVs."""
+"""按 FBX 材质找到对应的 PNG，将角色贴图和计时器装入奥0的贴图槽。"""
 
 from collections import defaultdict
 import heapq

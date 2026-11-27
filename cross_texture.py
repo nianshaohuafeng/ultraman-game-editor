@@ -1,4 +1,4 @@
-"""Convert the indexed FE3 textures used by a fighter to native PSP POMs."""
+"""把奥3角色的索引贴图和色表转成奥0的 POM，并换算模型的纹理坐标。"""
 
 from collections import defaultdict
 import math
